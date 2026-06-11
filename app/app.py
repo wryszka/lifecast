@@ -13,7 +13,7 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import CARDS, FLOWS, PERSONAS, TILES
+from content import CARDS, FLOWS, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, TILES
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -190,6 +190,34 @@ def status():
         except Exception:
             tiles.append({"label": label, "value": "—", "detail": "status unavailable (grant pending?)"})
     return {"tiles": tiles}
+
+
+@app.get("/api/governance")
+def governance():
+    """The record for the governed process — read-only, straight from the tables."""
+    T = f"`{CATALOG}`.`{SCHEMA}`"
+    runs, error = [], None
+    try:
+        r = w().statement_execution.execute_statement(
+            statement=f"""
+                SELECT date_format(q.run_ts,'dd MMM yyyy HH:mm') AS run,
+                       q.verdict, q.rows_bronze, q.rows_silver, q.rows_quarantined,
+                       round(100*q.quarantine_rate,2) AS quarantine_pct,
+                       q.assumption_set_id, q.rule_breakdown,
+                       coalesce(s.signed_off_by, '—') AS signed_off_by
+                FROM {T}.gld_run_quality q
+                LEFT JOIN {T}.gld_run_signoff s
+                  ON q.job_run_id = s.job_run_id AND q.run_ts = s.run_ts
+                ORDER BY q.run_ts DESC LIMIT 15""",
+            warehouse_id=WAREHOUSE_ID, wait_timeout="30s")
+        cols = [c.name for c in r.manifest.schema.columns]
+        runs = [dict(zip(cols, row)) for row in (r.result.data_array or [])]
+    except Exception as e:
+        error = "Run history unavailable — has the overnight run executed, and does the app have SELECT on the schema?"
+    inventory = [{"what": i["what"],
+                  "where": {"label": i["where"][0], "url": resolve_link(i["where"][1])},
+                  "why": i["why"]} for i in GOVERNANCE_INVENTORY]
+    return {"scope": GOVERNANCE_SCOPE, "runs": runs, "error": error, "inventory": inventory}
 
 
 @app.get("/")

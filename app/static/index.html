@@ -79,6 +79,28 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .step h3{font-size:15px;font-weight:700;margin:10px 0 6px}
 .step p{font-size:12.5px;color:var(--muted);flex:1}
 .step .lnk{display:block;font-size:12px;font-weight:600;margin-top:6px}
+/* top nav (tabs) */
+.topnav{display:flex;gap:18px;margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:0}
+.topnav a{font-size:13px;font-weight:600;color:var(--muted);padding:6px 2px 10px;border-bottom:2px solid transparent}
+.topnav a.on{color:var(--v);border-bottom-color:var(--v)}
+.topnav a:hover{color:var(--v)}
+/* governance */
+.gtable{width:100%;border-collapse:collapse;margin-top:10px;background:var(--card);
+        border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:12.5px}
+.gtable th{background:var(--bg);text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--line)}
+.gtable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.gtable tr:last-child td{border-bottom:none}
+.gtable .num{text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 10px}
+.badge.GREEN,.badge.TIES_OUT{background:var(--green-bg);color:var(--green)}
+.badge.RED,.badge.DRIFT{background:#fef3f2;color:#b42318}
+.rulebar{display:flex;align-items:center;gap:10px;margin:6px 0}
+.rulebar .rname{flex:0 0 180px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,monospace}
+.rulebar .bar{height:14px;background:var(--v100);border-radius:4px}
+.rulebar .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scopenote{margin-top:18px;font-size:12.5px;color:var(--muted);background:var(--card);
+           border:1px dashed var(--line);border-radius:10px;padding:10px 14px}
 /* landing tiles */
 .tilegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-top:22px}
 .uctile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
@@ -110,9 +132,16 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 <body>
 <div class="wrap" id="root">Loading…</div>
 <script>
-let DATA=null, STATUS=null;
+let DATA=null, STATUS=null, GOV=null;
 const root=document.getElementById('root');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function nav(active){
+  return `<div class="topnav">
+    <a href="#/" class="${active==='home'?'on':''}">Use cases</a>
+    <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
+  </div>`;
+}
 
 function header(crumbs){
   let c = crumbs ? `<div class="crumb">${crumbs}</div>` : '';
@@ -138,7 +167,7 @@ function landing(){
     `<span class="chip ${esc(t.value)}">${esc(t.label)}: <b>${esc(t.value)}</b></span>`).join('')+`</div>` : '';
   const plinks = DATA.personas.map(p=>
     `<a class="plink" href="#/p/${p.id}">${esc(p.title)} · ${p.cards.length} questions</a>`).join('');
-  root.innerHTML = `
+  root.innerHTML = nav('home') + `
   <div class="eyebrow">Bricksurance Life · presenter's cockpit</div>
   <h1>LifeCast</h1>
   <p class="sub">Actuarial liability modelling, rebuilt around the existing actuarial engine — one
@@ -163,7 +192,7 @@ function flowPage(fid){
        <p>${esc(s.text)}</p>
        <a class="lnk" href="${s.code.url}" target="_blank">${esc(s.code.label)} ↗</a>
        <a class="lnk" href="${s.live.url}" target="_blank">${esc(s.live.label)} ↗</a></div>`).join('');
-  root.innerHTML = `
+  root.innerHTML = nav('home') + `
   <div class="crumb"><a href="#/">LifeCast</a> / ${esc(f.eyebrow)}</div>
   <div class="eyebrow">${esc(f.eyebrow)}</div>
   <h1 class="flow-h2">${esc(f.title)}</h1>
@@ -210,10 +239,78 @@ function cardPage(pid, cid){
   </div>`;
 }
 
+async function governancePage(){
+  if(!GOV){
+    root.innerHTML = nav('gov') + `<div class="eyebrow">Governance</div><h1 class="flow-h2">The record</h1>
+      <p class="sub" style="margin-top:10px">Loading the run record…</p>`;
+    try{ GOV = await (await fetch('api/governance')).json(); }catch(e){ GOV={runs:[],inventory:[],error:'Could not load.'}; }
+    if(location.hash.includes('governance')) governancePage();
+    return;
+  }
+  const g = GOV;
+
+  // 1 · run history
+  let runsHtml;
+  if(g.error){ runsHtml = `<p class="sub" style="margin-top:10px">${esc(g.error)}</p>`; }
+  else if(!g.runs.length){ runsHtml = `<p class="sub" style="margin-top:10px">No runs on record yet — run the overnight job.</p>`; }
+  else{
+    runsHtml = `<table class="gtable"><tr><th>Run</th><th>Verdict</th><th class="num">Landed</th>
+      <th class="num">Clean</th><th class="num">Quarantined</th><th>Basis in force</th><th>Signed off by</th></tr>` +
+      g.runs.map(r=>`<tr>
+        <td>${esc(r.run)}</td>
+        <td><span class="badge ${esc(r.verdict)}">${esc(r.verdict)}</span></td>
+        <td class="num">${Number(r.rows_bronze).toLocaleString()}</td>
+        <td class="num">${Number(r.rows_silver).toLocaleString()}</td>
+        <td class="num">${Number(r.rows_quarantined).toLocaleString()} (${esc(r.quarantine_pct)}%)</td>
+        <td style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(r.assumption_set_id||'—')}</td>
+        <td>${esc(r.signed_off_by)}</td></tr>`).join('') + `</table>`;
+  }
+
+  // 2 · why it went RED — latest run with rejects
+  let rulesHtml = `<p class="sub" style="margin-top:10px">No rejects on the current record — inject the bad feed to see this populate.</p>`;
+  const withRejects = (g.runs||[]).find(r=>Number(r.rows_quarantined)>0 && r.rule_breakdown);
+  if(withRejects){
+    let rules={}; try{ rules=JSON.parse(withRejects.rule_breakdown); }catch(e){}
+    const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
+    const max=Math.max(...entries.map(e=>e[1]),1);
+    rulesHtml = `<p class="sub" style="margin:10px 0 4px">Run of ${esc(withRejects.run)} —
+      ${Number(withRejects.rows_quarantined).toLocaleString()} rows rejected, by rule:</p>` +
+      entries.map(([k,v])=>`<div class="rulebar"><span class="rname">${esc(k)}</span>
+        <span class="bar" style="width:${Math.round(260*v/max)}px"></span>
+        <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join('');
+  }
+
+  // 3 · what we record and why
+  const inv = `<table class="gtable"><tr><th>What's recorded</th><th>Where</th><th>Why it matters</th></tr>` +
+    g.inventory.map(i=>`<tr><td style="font-weight:600">${esc(i.what)}</td>
+      <td><a href="${i.where.url}" target="_blank" style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(i.where.label)} ↗</a></td>
+      <td style="color:var(--muted)">${esc(i.why)}</td></tr>`).join('') + `</table>`;
+
+  root.innerHTML = nav('gov') + `
+  <div class="eyebrow">Governance</div>
+  <h1 class="flow-h2">The record</h1>
+  <p class="story">Nothing on this page was written for audit — it's the by-product of running the
+  process. Three questions an auditor or a head of function asks, answered straight from the tables.</p>
+
+  <div class="section" style="margin-top:22px"><span class="eyebrow">1 · What ran, and was it clean?</span></div>
+  ${runsHtml}
+
+  <div class="section" style="margin-top:26px"><span class="eyebrow">2 · When it went RED — why, exactly?</span></div>
+  ${rulesHtml}
+
+  <div class="section" style="margin-top:26px"><span class="eyebrow">3 · What we record, and why</span></div>
+  ${inv}
+
+  <div class="scopenote">${esc(g.scope)}</div>
+  <div class="foot">Read-only, pulled live from <b>${esc(DATA?DATA.catalog:'')}.lifecast</b> —
+  the same tables an auditor would query directly.</div>`;
+}
+
 function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
+  if(parts[0]==='governance') return governancePage();
   if(parts[0]==='flow' && parts[1]) return flowPage(parts[1]);
   if(parts[0]==='p' && parts[2]) return cardPage(parts[1], parts[2]);
   if(parts[0]==='p' && parts[1]) return personaPage(parts[1]);

@@ -78,6 +78,31 @@ FLOWS = [
 },
 ]
 
+# ── Governance: what gets recorded for the governed process, and why. Today
+# this covers use case 01 only; assumptions / scenarios / projections join the
+# tab as their story pages are added. ────────────────────────────────────────
+GOVERNANCE_SCOPE = ("Governing the model point generator (use case 01) today. Assumptions, "
+                    "scenarios and projection runs already keep the same kind of record — "
+                    "they join this tab as their story pages are added.")
+
+GOVERNANCE_INVENTORY = [
+ {"what": "Every row, exactly as it arrived",
+  "where": ("brz_policy_admin", "tbl:brz_policy_admin"),
+  "why": "The untouched record: source file and ingest time on every row. Whatever happens downstream, what arrived is never in dispute."},
+ {"what": "Every reject, with the rules it failed",
+  "where": ("slv_policies_quarantine", "tbl:slv_policies_quarantine"),
+  "why": "Quality failures are quarantined, not silently dropped — each row carries the exact rules it broke."},
+ {"what": "Every run: verdict, volumes, and the basis in force",
+  "where": ("gld_run_quality", "tbl:gld_run_quality"),
+  "why": "GREEN or RED with row counts, quarantine rate, per-rule breakdown — and which approved assumption basis was live. Which extract and which basis fed which run, recorded, not remembered."},
+ {"what": "The sign-off",
+  "where": ("gld_run_signoff", "tbl:gld_run_signoff"),
+  "why": "Who signed the gate, when. Automated today; the human approval workflow is the same pattern assumption governance already uses."},
+ {"what": "Lineage, end to end",
+  "where": ("gld_model_points (open the Lineage tab)", "tbl:gld_model_points"),
+  "why": "Volume → bronze → silver → gold, captured automatically by Unity Catalog. Nobody maintains this; it cannot drift from reality."},
+]
+
 PERSONAS = [
     {"id": "actuary", "title": "Actuary",
      "blurb": "Owns the methodology and the numbers. Wants tie-outs, governed assumptions, "
