@@ -1,0 +1,32 @@
+# Bricksurance LifeCast — Databricks Asset Bundle
+#
+# Portability (hard rule, brief §11): ONE edit to move workspaces — override
+# `catalog` per target. No workspace URLs or absolute IDs anywhere; the host
+# comes from the CLI profile at deploy time:
+#
+#   databricks bundle deploy -t dev --profile <PROFILE>
+#
+# Note: we deliberately do NOT use `mode: development` — it would prefix every
+# resource name (including the UC schema) with `dev_<user>_`, breaking the
+# naming hard rule (schema is always exactly `lifecast`, jobs/pipelines carry
+# the bare `lifecast_` token).
+
+bundle:
+  name: lifecast
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: "Target UC catalog (existing — the bundle never creates a catalog). The only edit needed to move workspaces."
+    default: lr_dev_aws_us_catalog
+
+targets:
+  dev:
+    default: true
+    workspace:
+      # Pinned under /Workspace/Shared so every asset is discoverable by any SA
+      # (not buried in a per-user path).
+      root_path: /Workspace/Shared/lifecast/${bundle.target}
+    # To move to another workspace: add a target here and override `catalog`.

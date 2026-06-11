@@ -1,0 +1,17 @@
+# Phase 1 — the governed model point pipeline (Lakeflow Declarative Pipelines).
+# Serverless, publishes into ${var.catalog}.lifecast with brz_/slv_/gld_ prefixes.
+# UC lineage volume -> bronze -> silver -> gold comes for free.
+resources:
+  pipelines:
+    lifecast_model_point_pipeline:
+      name: lifecast_model_point_pipeline
+      serverless: true
+      catalog: ${var.catalog}
+      schema: lifecast
+      libraries:
+        - file:
+            path: ../src/pipeline/model_point_pipeline.py
+      configuration:
+        catalog: ${var.catalog}
+        volume_root: /Volumes/${var.catalog}/lifecast/lifecast_files
+        project: lifecast

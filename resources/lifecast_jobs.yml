@@ -1,0 +1,68 @@
+# LifeCast jobs — all serverless (notebook tasks with no cluster spec run on
+# serverless compute), all tagged project=lifecast.
+resources:
+  jobs:
+
+    # Phase 0 — run once after deploy. Generates the synthetic Bricksurance
+    # Life term book (clean feed + separate bad-feed-day file) and the mock
+    # "Prophet" model point extract (the before-state anchor).
+    lifecast_synthetic_foundation:
+      name: lifecast_synthetic_foundation
+      description: "Phase 0: synthetic Bricksurance Life policy book (clean overnight feed + bad-feed-day demo file) and the mock downstream model point extract."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      tasks:
+        - task_key: policy_book
+          notebook_task:
+            notebook_path: ../src/notebooks/00_synthetic_policy_book.py
+        - task_key: prophet_extract
+          depends_on:
+            - task_key: policy_book
+          notebook_task:
+            notebook_path: ../src/notebooks/01_prophet_extract_mock.py
+
+    # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
+    # -> export. A bad extract fails the gate and STOPS the run before the
+    # downstream model point file is burned. Prophet stays downstream, unchanged.
+    lifecast_overnight_run:
+      name: lifecast_overnight_run
+      description: "Phase 1: governed overnight run — refresh model point pipeline, data-quality gate (fails loudly on a bad feed), export model point file + validation extract."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      tasks:
+        - task_key: refresh_model_points
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.lifecast_model_point_pipeline.id}
+        - task_key: quality_gate
+          depends_on:
+            - task_key: refresh_model_points
+          notebook_task:
+            notebook_path: ../src/notebooks/02_quality_gate.py
+        - task_key: export_model_point_file
+          depends_on:
+            - task_key: quality_gate
+          notebook_task:
+            notebook_path: ../src/notebooks/03_export_model_point_file.py
+
+    # Demo lever — inject the bad feed day (gate goes RED, run stops), or
+    # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
+    lifecast_bad_feed_day:
+      name: lifecast_bad_feed_day
+      description: "Demo lever: action=inject drops the bad feed into the landing path; action=restore removes it and full-refreshes the pipeline."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: action
+          default: inject
+      tasks:
+        - task_key: bad_feed_day
+          notebook_task:
+            notebook_path: ../src/notebooks/04_bad_feed_day.py

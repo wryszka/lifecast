@@ -1,0 +1,15 @@
+# Unity Catalog objects — the single `lifecast` schema and the file landing
+# volume. The catalog itself is pre-existing and never created here.
+resources:
+  schemas:
+    lifecast:
+      catalog_name: ${var.catalog}
+      name: lifecast
+      comment: "Bricksurance LifeCast — actuarial modelling demo. Single schema; medallion layers via table prefix (brz_/slv_/gld_)."
+
+  volumes:
+    lifecast_files:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.lifecast.name}
+      name: lifecast_files
+      comment: "LifeCast landing zone: raw policy-admin feed, mock Prophet model point extract, exports, demo assets (bad feed day)."
