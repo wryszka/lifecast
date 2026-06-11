@@ -10,7 +10,7 @@ resources:
       schema: lifecast
       libraries:
         - file:
-            path: ../02_model_point_pipeline.py
+            path: ../01_model_point_pipeline/00_model_point_pipeline.py
       configuration:
         catalog: ${var.catalog}
         volume_root: /Volumes/${var.catalog}/lifecast/lifecast_files

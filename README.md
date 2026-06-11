@@ -34,20 +34,19 @@ databricks bundle run lifecast_overnight_run -t dev --profile <PROFILE>
 ```
 
 All workspace assets land **directly in `/Workspace/Shared/lifecast`** — a live
-hands-on system, not a buried bundle tree. The numbered notebooks read first to last:
+hands-on system organised by use case, simplest first. Each folder is one user
+story with its own README and numbered assets in run order:
 
 ```
 /Workspace/Shared/lifecast/
-  00_synthetic_policy_book      Phase 0 — generate the synthetic term book + bad-feed file
-  01_prophet_extract_mock      Phase 0 — the before-state model point extract
-  02_model_point_pipeline.py   Phase 1 — SOURCE of the pipeline (runs inside it, not as a notebook)
-  03_quality_gate              Phase 1 — gate verdict, sign-off, RED stops the run
-  04_export_model_point_file   Phase 1 — MPF export + Excel validation extract
-  05_bad_feed_day              demo lever — inject / restore the bad feed
-  06_assumption_master         Phase 2 — asm_ tables, UC functions, seed basis, Excel template
-  07_excel_entry_roundtrip     Phase 2 — maker: the Excel round-trip, headless
-  08_assumption_approval       Phase 2 — checker: approve / reject, audited
-  .bundle/                     bundle internals (state, artifacts) — ignore
+  00_foundation/             run once — builds the synthetic world
+    00_synthetic_policy_book · 01_prophet_extract_mock
+  01_model_point_pipeline/   use case 1 — the governed overnight feed + quality gate
+    00_model_point_pipeline.py (pipeline source) · 01_quality_gate
+    02_export_model_point_file · 03_bad_feed_day (demo lever)
+  02_assumption_governance/  use case 2 — versioned basis, maker/checker, Excel round-trip
+    00_assumption_master · 01_excel_entry_roundtrip · 02_assumption_approval
+  .bundle/                   bundle internals — ignore
 ```
 
 All data in `<catalog>.lifecast` (single schema; medallion via `brz_`/`slv_`/`gld_`

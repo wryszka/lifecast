@@ -17,15 +17,15 @@ resources:
       tasks:
         - task_key: policy_book
           notebook_task:
-            notebook_path: ../00_synthetic_policy_book.py
+            notebook_path: ../00_foundation/00_synthetic_policy_book.py
         - task_key: prophet_extract
           depends_on:
             - task_key: policy_book
           notebook_task:
-            notebook_path: ../01_prophet_extract_mock.py
+            notebook_path: ../00_foundation/01_prophet_extract_mock.py
         - task_key: assumption_master
           notebook_task:
-            notebook_path: ../06_assumption_master.py
+            notebook_path: ../02_assumption_governance/00_assumption_master.py
 
     # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
     # -> export. A bad extract fails the gate and STOPS the run before the
@@ -46,12 +46,12 @@ resources:
           depends_on:
             - task_key: refresh_model_points
           notebook_task:
-            notebook_path: ../03_quality_gate.py
+            notebook_path: ../01_model_point_pipeline/01_quality_gate.py
         - task_key: export_model_point_file
           depends_on:
             - task_key: quality_gate
           notebook_task:
-            notebook_path: ../04_export_model_point_file.py
+            notebook_path: ../01_model_point_pipeline/02_export_model_point_file.py
 
     # Phase 2 — the maker step. Runs exactly the SQL the Excel template submits
     # via DATABRICKS.SQL: drafts a new basis from the approved one (smoker qx
@@ -71,7 +71,7 @@ resources:
       tasks:
         - task_key: assumption_entry
           notebook_task:
-            notebook_path: ../07_excel_entry_roundtrip.py
+            notebook_path: ../02_assumption_governance/01_excel_entry_roundtrip.py
 
     # Phase 2 — the checker step. approve: new basis live, old one SUPERSEDED;
     # reject: current basis stays in force. Every action lands in asm_approval_log.
@@ -92,7 +92,7 @@ resources:
       tasks:
         - task_key: assumption_approval
           notebook_task:
-            notebook_path: ../08_assumption_approval.py
+            notebook_path: ../02_assumption_governance/02_assumption_approval.py
 
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
@@ -109,4 +109,4 @@ resources:
       tasks:
         - task_key: bad_feed_day
           notebook_task:
-            notebook_path: ../05_bad_feed_day.py
+            notebook_path: ../01_model_point_pipeline/03_bad_feed_day.py
