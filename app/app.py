@@ -13,7 +13,7 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import CARDS, FLOWS, PERSONAS
+from content import CARDS, FLOWS, PERSONAS, TILES
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -128,9 +128,9 @@ def content():
     for f in FLOWS:
         flows.append({
             "id": f["id"], "eyebrow": f["eyebrow"], "title": f["title"], "story": f["story"],
-            "today": f["today"], "today_note": f["today_note"],
+            "now_intro": f["now_intro"],
             "steps": [{
-                "n": s["n"], "title": s["title"], "text": s["text"],
+                "n": s["n"], "title": s["title"], "now": s["now"], "text": s["text"],
                 "code": {"label": s["code"][0], "url": resolve_link(s["code"][1])},
                 "live": {"label": s["live"][0], "url": resolve_link(s["live"][1])},
             } for s in f["steps"]],
@@ -152,7 +152,9 @@ def content():
                 "tomorrow": c["tomorrow"],
             })
         personas.append({**p, "cards": cards})
-    return {"flows": flows, "personas": personas, "host": HOST, "catalog": CATALOG}
+    tiles = [{**{k: v for k, v in t.items() if k != "link"},
+              **({"url": resolve_link(t["link"])} if "link" in t else {})} for t in TILES]
+    return {"tiles": tiles, "flows": flows, "personas": personas, "host": HOST, "catalog": CATALOG}
 
 
 def _sql_one(query: str):

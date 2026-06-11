@@ -8,38 +8,64 @@ app.py resolves into URLs (path-based where possible, ID-resolved best-effort).
 No business logic lives here — curated structure and short annotations only.
 """
 
-# ── Flows: the story-first presentation. Landing = the first flow. ──────────
-# Each step is one small chunk with the code one click away. Copy never names
-# a competitor (hard rule) — "your liability engine" carries the contrast.
+# ── Landing tiles: one per use case, simplest first. Tile 01 opens the first
+# story-flow page; the rest link to their live assets until their story pages
+# are written. ───────────────────────────────────────────────────────────────
+TILES = [
+ {"n": "01", "title": "Model point generator",
+  "text": "Policy data → governed model point file. The existing actuarial engine runs downstream, unchanged.",
+  "flow": "model-point-feed"},
+ {"n": "02", "title": "Assumption governance",
+  "text": "Mortality / lapse / expense as a versioned basis — Excel entry kept, maker/checker, audit trail.",
+  "link": "folder:02_assumption_governance"},
+ {"n": "03", "title": "Results & Genie",
+  "text": "Engine output lands in Delta once; dashboard + Genie replace the pivot-table rebuild.",
+  "link": "folder:03_results_and_genie"},
+ {"n": "04", "title": "Scenario management",
+  "text": "Your ESG's deliveries versioned and gated — plus an illustrative QuantLib set.",
+  "link": "folder:04_scenario_management"},
+ {"n": "05", "title": "Projection migration",
+  "text": "The workshop: same product in Python, tied out side by side, in seconds.",
+  "link": "folder:05_projection_migration"},
+ {"n": "06", "title": "Stochastic & boundaries",
+  "text": "1,000-path fan-out — and an honest map of where the hard edges are.",
+  "link": "folder:06_stochastic_boundaries"},
+]
+
+# ── Flows: the story-first presentation. Each step pairs the current state
+# ("how we think this runs today" — a deliberate discovery hook) with the same
+# chunk here, code one click away. Copy never names a competitor (hard rule) —
+# "the existing actuarial engine" carries the contrast. ──────────────────────
 FLOWS = [
 {
  "id": "model-point-feed",
- "eyebrow": "The first flow — start here",
+ "eyebrow": "Use case 01 — model point generator",
  "title": "Policy data → model point file, governed",
- "story": ("Every liability run starts the same way: policy admin data has to become a "
-           "model point file. Today that means a SQL extract, an Excel transform and an "
-           "overnight batch nobody can see inside — and a broken feed is discovered at 9am, "
-           "by the actuary whose morning it just ate. Here the same journey is four small "
-           "steps. Each one is a short notebook you can open and read. The liability engine "
-           "downstream doesn't change at all."),
- "today": ["Policy admin", "SQL extract", "Excel transform", "File share",
-           "Overnight batch", "“Why do the numbers look wrong?”"],
- "today_note": "no lineage · no gate · validation by eyeball · one person knows how it works",
+ "story": ("Every liability run starts the same way: policy admin data has to become the "
+           "model point file the existing actuarial engine reads. The engine itself is fine — "
+           "it's everything in front of it that's fragile. Below, the journey as we typically "
+           "see it run today, mapped step for step onto the same journey here: four small "
+           "chunks, each a short notebook you can open and read. The engine doesn't change at all."),
+ "now_intro": "How we think this runs today — tell us where your shop differs:",
  "steps": [
   {"n": "1", "title": "The feed lands",
+   "now": "A scheduled SQL job pulls policies from the admin system; the extract lands wherever it lands, named by convention.",
    "text": "The nightly policy CSV drops on a governed volume and is ingested as-landed — bronze keeps the untouched record of what arrived.",
    "code": ("Code — pipeline source", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
    "live": ("The landing zone", "vol:")},
   {"n": "2", "title": "Clean & quarantine",
+   "now": "An Excel workbook reshapes the extract into model points — formulas, paste areas, and one careful owner who knows its quirks.",
    "text": "Typed, deduplicated, seven quality rules. Every reject lands in quarantine with the exact rules it failed — visible, never silent.",
    "code": ("Code — same file, ~40 lines", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
    "live": ("Pipeline graph, live", "pipeline:lifecast_model_point_pipeline")},
   {"n": "3", "title": "The gate signs off",
+   "now": "Validation is an eyeball check if there's time; a bad extract is usually discovered after the engine has already run.",
    "text": "GREEN goes on the record with the assumption basis in force. RED stops the run before the model point file is touched.",
    "code": ("Code — gate notebook", "nb:01_model_point_pipeline/01_quality_gate"),
    "live": ("Gate history", "tbl:gld_quality_dashboard")},
-  {"n": "4", "title": "The file your engine expects",
-   "text": "Model points exported in the exact legacy layout — downstream runs unchanged. Plus a read-only Excel extract for the eyeball check.",
+  {"n": "4", "title": "The file the engine expects",
+   "now": "The file is dropped on a share; the existing actuarial engine picks it up in the overnight batch. No lineage from policy to model point.",
+   "text": "Model points exported in the exact layout the engine reads today — downstream unchanged. Plus a read-only Excel extract for the eyeball check.",
    "code": ("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
    "live": ("The exported file", "vol:export")},
  ],
