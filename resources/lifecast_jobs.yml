@@ -29,6 +29,9 @@ resources:
         - task_key: prophet_results
           notebook_task:
             notebook_path: ../03_results_and_genie/00_prophet_results_mock.py
+        - task_key: external_scenarios
+          notebook_task:
+            notebook_path: ../04_scenario_management/00_external_scenarios_mock.py
 
     # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
     # -> export. A bad extract fails the gate and STOPS the run before the
@@ -127,6 +130,49 @@ resources:
             - task_key: refresh_results
           notebook_task:
             notebook_path: ../03_results_and_genie/04_create_genie_space.py
+
+    # Phase 4 (a) — consume: validate, version and activate an external ESG
+    # scenario delivery. Zero friction for licensed firms.
+    lifecast_scenario_ingest:
+      name: lifecast_scenario_ingest
+      description: "Phase 4: scenario ingest (consume pattern) — validate the vendor delivery, version it in UC, activate it; broken deliveries fail the gate and are never activated."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      tasks:
+        - task_key: scenario_ingest
+          notebook_task:
+            notebook_path: ../04_scenario_management/01_scenario_ingest.py
+
+    # Phase 4 (b) — illustrate: EIOPA RFR curve -> QuantLib HW1F + BS paths,
+    # versioned in UC, calibration tracked in MLflow. AVAILABLE, never auto-active.
+    lifecast_esg_illustrative:
+      name: lifecast_esg_illustrative
+      description: "Phase 4: illustrative scenario generator — EIOPA RFR ingest, then QuantLib Hull-White 1F + Black-Scholes calibrated to the curve; params + martingale diagnostics in MLflow."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: n_scenarios
+          default: "1000"
+        - name: hw_a
+          default: "0.03"
+        - name: hw_sigma
+          default: "0.009"
+        - name: equity_vol
+          default: "0.18"
+      tasks:
+        - task_key: rfr_curve
+          notebook_task:
+            notebook_path: ../04_scenario_management/02_eiopa_rfr.py
+        - task_key: quantlib_generator
+          depends_on:
+            - task_key: rfr_curve
+          notebook_task:
+            notebook_path: ../04_scenario_management/03_quantlib_hull_white.py
 
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).

@@ -19,7 +19,8 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 1 | Model point pipeline | ✅ Built |
 | 2 | Assumption governance | ✅ Built |
 | 3 | Results + AI/BI + Genie | ✅ Built |
-| 4–6 | Demand-driven | Not started |
+| 4 | ESG / scenario management | ✅ Built |
+| 5–6 | Demand-driven | Not started |
 
 ## Install — one edit
 
@@ -50,6 +51,9 @@ story with its own README and numbered assets in run order:
     00_prophet_results_mock · 01_results_pipeline.py (pipeline source)
     02_cfo_export · 03_create_dashboard · 04_create_genie_space
     + LifeCast — BEL Movement (AI/BI dashboard lives here)
+  04_scenario_management/    use case 4 — scenarios governed: consume the vendor's, illustrate with QuantLib
+    00_external_scenarios_mock · 01_scenario_ingest · 02_eiopa_rfr
+    03_quantlib_hull_white · sample_data/ (EIOPA-format workbook)
   .bundle/                   bundle internals — ignore
 ```
 
@@ -71,6 +75,8 @@ prefixes), all files in the `lifecast_files` volume.
 | `lifecast_files/excel/lifecast_assumption_entry.xlsx` | The Excel connection point: live `DATABRICKS.SQL` reads of the approved basis + the submit-shock entry sheet |
 | Pipeline `lifecast_results_pipeline` + job `lifecast_results_run` | Phase 3: quarterly results CSV dumps → `brz_prophet_results` → `slv_projection_results` → `gld_results_by_product` + `gld_bel_movement`; then CFO export (Excel+CSV board pack), dashboard publish, Genie space |
 | `LifeCast — BEL Movement` dashboard · `LifeCast — Results` Genie space | The reporting destinations: counters/trend/movement live from the governed layer; Genie answers "BEL movement vs last quarter by product line" |
+| Job `lifecast_scenario_ingest` | Phase 4 consume: vendor scenario delivery → validation gate → `esg_scenarios` + versioned `esg_scenario_sets` registry → ACTIVE. Feed point: `esg_active_set_id()` / `esg_scenarios_active()` |
+| Job `lifecast_esg_illustrative` | Phase 4 illustrate: EIOPA RFR ingest (`esg_rfr_curve`, reused from the Excel accelerator) → QuantLib HW1F + Black-Scholes → `esg_hull_white_paths`, AVAILABLE; calibration + martingale diagnostics in MLflow (`/Shared/lifecast/04_scenario_management/esg_calibration`) |
 
 ## The demo beat
 
