@@ -257,6 +257,29 @@ resources:
           notebook_task:
             notebook_path: ../05_projection_migration/02_projection_validation.py
 
+    # Phase 6 — stochastic valuation fan-out: the term book across every path
+    # of a governed scenario set via mapInPandas. The explainer notebooks in
+    # 06_stochastic_boundaries/ are interactive-only (discuss, don't sell).
+    lifecast_stochastic_run:
+      name: lifecast_stochastic_run
+      description: "Phase 6: stochastic fan-out — per-scenario BEL across the governed scenario set (mapInPandas), distribution + curve-reconciliation metric to MLflow."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: scenario_source
+          default: active
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+      tasks:
+        - task_key: stochastic_fan_out
+          environment_key: default
+          notebook_task:
+            notebook_path: ../06_stochastic_boundaries/00_stochastic_fan_out.py
+
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
     lifecast_bad_feed_day:

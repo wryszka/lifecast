@@ -21,7 +21,7 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 3 | Results + AI/BI + Genie | ✅ Built |
 | 4 | ESG / scenario management | ✅ Built |
 | 5 | Projection migration POC | ✅ Built |
-| 6 | Stochastic + boundaries | Not started |
+| 6 | Stochastic + boundaries | ✅ Built |
 
 ## Install — one edit
 
@@ -63,6 +63,9 @@ story with its own README and numbered assets in run order:
   05_projection_migration/   use case 5 — the workshop: same product in Python, tied out side by side
     00_prophet_baseline_mock · 01_term_projection (the workshop notebook)
     02_projection_validation
+  06_stochastic_boundaries/  use case 6 — the fan-out demo + three honest explainers
+    00_stochastic_fan_out · 01_vectorisation_boundary
+    02_nested_stochastic_costing · 03_esg_plugin
   .bundle/                   bundle internals — ignore
 ```
 
@@ -87,6 +90,7 @@ prefixes), all files in the `lifecast_files` volume.
 | Job `lifecast_scenario_ingest` | Phase 4 consume: vendor scenario delivery → validation gate → `esg_scenarios` + versioned `esg_scenario_sets` registry → ACTIVE. Feed point: `esg_active_set_id()` / `esg_scenarios_active()` |
 | Job `lifecast_esg_illustrative` | Phase 4 illustrate: EIOPA RFR ingest (`esg_rfr_curve`, reused from the Excel accelerator) → QuantLib HW1F + Black-Scholes → `esg_hull_white_paths`, AVAILABLE; calibration + martingale diagnostics in MLflow (`/Shared/lifecast/04_scenario_management/esg_calibration`) |
 | Job `lifecast_projection_run` | Phase 5 (the expand): legacy baseline per model point → Python projection on governed inputs (`gld_term_projection`, MLflow-tracked, UC model `lifecast_term_projection` @champion) → per-MP tie-out gate (`gld_projection_validation`, £0.01 tolerance, drift fails the run) |
+| Job `lifecast_stochastic_run` | Phase 6: the term book across 1,000 governed scenario paths via `mapInPandas` (`gld_stochastic_bel`); distribution + curve-reconciliation metric to MLflow — run it on both scenario sets to show the basis difference. Explainers (vectorisation boundary, nested-stochastic costing, ESG plug-in) live in the folder |
 
 ## The demo beat
 
@@ -104,7 +108,12 @@ prefixes), all files in the `lifecast_files` volume.
    Python, on the governed basis and curve, **ties out to the penny per model point**
    (1,623/1,623) in ~0.2 seconds against a multi-hour anchor. Registered in UC, every
    run on the record. *The workshop beat: the client writes the product logic.*
-6. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
+6. **Stochastic + boundaries:** run `lifecast_stochastic_run` twice — once on the vendor
+   set, once on the QuantLib set. 1,000 path valuations in ~20s; the MLflow reconciliation
+   metric shows the martingale set reproducing the curve (−0.4%) and the vendor set
+   pricing its own basis (+1.7%). Then the explainers: where vectorisation breaks, what
+   nested stochastic costs, why the ESG stays the client's. *Discuss, don't sell.*
+7. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
    a +10% smoker loading becomes a draft basis, PENDING_APPROVAL. Run
    `lifecast_assumption_approval` → new basis live, old one SUPERSEDED, every step in
    `asm_approval_log`. The next overnight run records the new `assumption_set_id`.
