@@ -101,17 +101,17 @@ layout = [
             }}, 3, 5, 3, 6),
     widget("tbl_board", "board",
            ["reporting_period", "product_line", "bel_m", "movement_m", "movement_pct", "policy_count"],
-           {"version": 1, "widgetType": "table",
+           # Table widgets: version 2, columns carry ONLY fieldName + displayName
+           # (anything else -> "Visualization has no fields selected").
+           {"version": 2, "widgetType": "table",
             "frame": {"showTitle": True, "title": "Board pack — all quarters"},
-            # Table columns need title/type/displayAs (NOT displayName) or the
-            # widget renders as "no fields selected".
             "encodings": {"columns": [
-                {"fieldName": "reporting_period", "title": "Quarter", "type": "string", "displayAs": "string"},
-                {"fieldName": "product_line", "title": "Product line", "type": "string", "displayAs": "string"},
-                {"fieldName": "bel_m", "title": "BEL (£m)", "type": "float", "displayAs": "number", "alignContent": "right"},
-                {"fieldName": "movement_m", "title": "Movement (£m)", "type": "float", "displayAs": "number", "alignContent": "right"},
-                {"fieldName": "movement_pct", "title": "Movement %", "type": "float", "displayAs": "number", "alignContent": "right"},
-                {"fieldName": "policy_count", "title": "Policies", "type": "integer", "displayAs": "number", "alignContent": "right"},
+                {"fieldName": "reporting_period", "displayName": "Quarter"},
+                {"fieldName": "product_line", "displayName": "Product line"},
+                {"fieldName": "bel_m", "displayName": "BEL (£m)"},
+                {"fieldName": "movement_m", "displayName": "Movement (£m)"},
+                {"fieldName": "movement_pct", "displayName": "Movement %"},
+                {"fieldName": "policy_count", "displayName": "Policies"},
             ]}}, 0, 11, 6, 6),
 ]
 
