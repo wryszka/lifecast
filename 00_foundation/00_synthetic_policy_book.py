@@ -49,7 +49,10 @@ def make_policies(n: int, rng, id_start: int = 1) -> pd.DataFrame:
     """Synthetic level term assurance policies. Every row passes the Phase 1 quality rules."""
     age_at_entry = rng.integers(20, 61, n)
     term = rng.choice([10, 15, 20, 25, 30], n, p=[0.15, 0.20, 0.30, 0.20, 0.15])
-    days_back = rng.integers(0, 15 * 365, n)  # inception within the last 15 years
+    # Inception bounded by the policy term (and 15y), so an in-force policy has
+    # at least a year outstanding — duration in force is real, not accidental.
+    max_back = np.minimum((term - 1) * 365, 15 * 365)
+    days_back = (rng.random(n) * max_back).astype(int)
     inception = [TODAY - timedelta(days=int(d)) for d in days_back]
     dob_jitter = rng.integers(0, 365, n)
     dob = [inc - timedelta(days=int(a) * 365 + int(j)) for inc, a, j in zip(inception, age_at_entry, dob_jitter)]

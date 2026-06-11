@@ -43,8 +43,9 @@ import pandas as pd
 
 mps = spark.sql(f"SELECT * FROM {FQ}.gld_model_points ORDER BY mp_num").toPandas()
 assert len(mps), "No model points — run lifecast_overnight_run first (use case 01)."
-# DECIMAL columns arrive as python Decimal objects — cast for numpy + MLflow serialization.
+# DECIMAL/DATE columns arrive as python objects — cast for numpy + MLflow serialization.
 mps["annual_premium"] = mps["annual_premium"].astype(float)
+mps["valuation_date"] = mps["valuation_date"].astype(str)
 
 basis_id = spark.sql(f"SELECT {FQ}.asm_active_set_id()").first()[0]
 mortality = spark.sql(f"SELECT * FROM {FQ}.asm_mortality_active()").toPandas()
@@ -86,10 +87,11 @@ def project_term_book(mps_df, mortality_df, lapse_df, expense_df, curve_df):
     rows = []
     for mp in mps_df.itertuples():
         in_force = float(mp.init_pols_if)
+        dur = int(round(float(mp.dur_if_y)))  # completed years in force at valuation
         pv_prem = pv_claim = pv_exp = 0.0
-        for t in range(int(mp.policy_term_years)):
-            q = qx[(int(mp.age_at_entry) + t, mp.sex, mp.smoker_status)]
-            w = lapse[t + 1]
+        for t in range(int(mp.outstanding_term_years)):
+            q = qx[(int(mp.age_attained) + t, mp.sex, mp.smoker_status)]
+            w = lapse[min(dur + t + 1, 40)]  # lapse by policy year, not projection year
             deaths = in_force * q
             infl = (1.0 + expense["expense_inflation_pa"]) ** t
             pv_prem += in_force * float(mp.annual_premium) * df_at(t)

@@ -46,6 +46,7 @@ import pandas as pd
 mps = spark.sql(f"SELECT * FROM {FQ}.gld_model_points ORDER BY mp_num").toPandas()
 assert len(mps), "No model points — run lifecast_overnight_run first (use case 01)."
 mps["annual_premium"] = mps["annual_premium"].astype(float)  # DECIMAL -> float
+mps["valuation_date"] = mps["valuation_date"].astype(str)
 
 basis_id = spark.sql(f"SELECT {FQ}.asm_active_set_id()").first()[0]
 mortality = spark.sql(f"SELECT * FROM {FQ}.asm_mortality_active()").toPandas()
@@ -98,15 +99,16 @@ prem_v = np.zeros(MAX_T)   # premiums received at time t (start of year t)
 outgo_v = np.zeros(MAX_T)  # claims + expenses paid at time t (end of year t-1)
 for mp in mps.itertuples():
     in_force = float(mp.init_pols_if)
-    for t in range(int(mp.policy_term_years)):
-        q = qx[(int(mp.age_at_entry) + t, mp.sex, mp.smoker_status)]
+    dur = int(round(float(mp.dur_if_y)))
+    for t in range(int(mp.outstanding_term_years)):
+        q = qx[(int(mp.age_attained) + t, mp.sex, mp.smoker_status)]
         deaths = in_force * q
         infl = (1.0 + expense["expense_inflation_pa"]) ** t
         prem_v[t] += in_force * float(mp.annual_premium)
         outgo_v[t + 1] += (deaths * float(mp.sum_assured)
                            + in_force * expense["maintenance_per_policy_pa"] * infl
                            + deaths * expense["claim_handling_per_claim"])
-        in_force = (in_force - deaths) * (1.0 - lapse[t + 1])
+        in_force = (in_force - deaths) * (1.0 - lapse[min(dur + t + 1, 40)])
 
 # Deterministic anchor: the same cashflows on the EIOPA curve.
 spot = {int(r.maturity_years): float(r.spot_rate) for r in curve.itertuples()}

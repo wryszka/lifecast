@@ -101,6 +101,21 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .rulebar .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .scopenote{margin-top:18px;font-size:12.5px;color:var(--muted);background:var(--card);
            border:1px dashed var(--line);border-radius:10px;padding:10px 14px}
+/* runbook + terms */
+.beat{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.beat summary{cursor:pointer;padding:14px 18px;font-weight:700;font-size:14px;color:var(--v);list-style:none}
+.beat summary::before{content:'▸ '} .beat[open] summary::before{content:'▾ '}
+.beat .b-steps{padding:0 18px 14px}
+.b-step{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.b-step .bn{width:24px;height:24px;border-radius:7px;background:var(--v50);color:var(--v);font-weight:800;
+            font-size:12px;display:flex;align-items:center;justify-content:center}
+.b-step .bdo{font-weight:600;font-size:13px}
+.b-step .bex{font-size:12.5px;color:var(--muted);margin-top:2px}
+.b-step .bsay{font-size:12.5px;margin-top:4px;color:var(--ink)}
+.b-step .bsay::before{content:'Say: ';font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--v)}
+.termrow{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-top:10px}
+.termrow b{display:block;margin-bottom:2px}
+.termrow span{font-size:13px;color:var(--muted)}
 /* landing tiles */
 .tilegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-top:22px}
 .uctile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
@@ -140,6 +155,7 @@ function nav(active){
   return `<div class="topnav">
     <a href="#/" class="${active==='home'?'on':''}">Use cases</a>
     <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
+    <a href="#/terms">Terms</a>
   </div>`;
 }
 
@@ -184,6 +200,17 @@ function landing(){
 
 function flowPage(fid){
   const f = DATA.flows.find(x=>x.id===fid); if(!f) return landing();
+  loadGov().then(g=>{
+    const r=(g.runs||[])[0]; if(!r) return;
+    const el=document.getElementById('flowchips'); if(!el) return;
+    el.innerHTML = [
+      `Valuation date: <b>${esc(r.valuation_date||'—')}</b>`,
+      `Last run: <b class="${esc(r.verdict)}" style="color:${r.verdict==='GREEN'?'var(--green)':'#b42318'}">${esc(r.verdict)}</b>`,
+      `${Number(r.rows_bronze).toLocaleString()} rows landed`,
+      r.policies_in_scope?`<b>${Number(r.policies_in_scope).toLocaleString()}</b> policies → <b>${Number(r.model_points).toLocaleString()}</b> model points`:null,
+      r.movement_check && r.movement_check!=='—' ? `movement vs last good run: <b>${esc(r.movement_check)}</b>${r.movement_policies_pct!=null?` (Δ ${esc(r.movement_policies_pct)}%)`:''}` : null,
+    ].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');
+  });
   const nows = f.steps.map(s=>
     `<div class="nowcard"><span class="nlbl">NOW</span>${esc(s.now)}</div>`).join('');
   const arrows = f.steps.map(()=>'<div>↓</div>').join('');
@@ -205,11 +232,34 @@ function flowPage(fid){
   <div class="lanetag here" style="margin-top:0">Here — the same step, governed; code one click away</div>
   <div class="mapgrid">${steps}</div>
 
+  <div class="chips" id="flowchips" style="margin-top:16px"></div>
+
   <div class="lever"><div><span class="tag">Prove it live</span><p>${esc(f.lever.text)}</p></div>
     <div class="gobtns">${f.lever.links.map(x=>`<a class="btn" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}</div></div>
 
+  <details class="beat"><summary>Run this beat — the 10-minute click path</summary>
+    <div class="b-steps">${f.beat.map((b,i)=>
+      `<div class="b-step"><div class="bn">${i+1}</div><div>
+         <div class="bdo">${esc(b.do)}</div>
+         <div class="bex">Expect: ${esc(b.expect)}</div>
+         <div class="bsay">${esc(b.say)}</div></div></div>`).join('')}</div></details>
+
+  <div class="scopenote">${esc(f.scope)}</div>
+
   <div class="foot">The "now" lane is how we typically see this run — if your shop differs, that's
-  exactly the conversation. Every link on the lower lane opens the real asset.</div>`;
+  exactly the conversation. Every link on the lower lane opens the real asset.
+  New to the terminology? <a href="#/terms">Eight terms, one line each</a>.</div>`;
+}
+
+function termsPage(){
+  root.innerHTML = nav('home') + `
+  <div class="crumb"><a href="#/">LifeCast</a> / terms</div>
+  <div class="eyebrow">Before you present</div>
+  <h1 class="flow-h2">Eight terms, one line each</h1>
+  <p class="story">Enough to survive the first follow-up question. The full learn-this-process
+  module is coming; until then, these are the words that matter.</p>
+  ${DATA.terms.map(t=>`<div class="termrow"><b>${esc(t.term)}</b><span>${esc(t.text)}</span></div>`).join('')}
+  <div class="foot">Client-safe — nothing here you couldn't say with the prospect in the room.</div>`;
 }
 
 function personaPage(pid){
@@ -256,15 +306,21 @@ async function governancePage(){
   else if(!g.runs.length){ runsHtml = `<p class="sub" style="margin-top:10px">No runs on record yet — run the overnight job.</p>`; }
   else{
     runsHtml = `<table class="gtable"><tr><th>Run</th><th>Verdict</th><th class="num">Landed</th>
-      <th class="num">Clean</th><th class="num">Quarantined</th><th>Basis in force</th><th>Signed off by</th></tr>` +
+      <th class="num">Quarantined</th><th class="num">Policies → MPs</th><th>Movement</th><th>Grouping</th>
+      <th>Basis in force <span style="text-transform:none;font-weight:600">(approved mortality/lapse/expense set)</span></th><th>Signed off by</th></tr>` +
       g.runs.map(r=>`<tr>
         <td>${esc(r.run)}</td>
         <td><span class="badge ${esc(r.verdict)}">${esc(r.verdict)}</span></td>
         <td class="num">${Number(r.rows_bronze).toLocaleString()}</td>
-        <td class="num">${Number(r.rows_silver).toLocaleString()}</td>
         <td class="num">${Number(r.rows_quarantined).toLocaleString()} (${esc(r.quarantine_pct)}%)</td>
+        <td class="num">${r.policies_in_scope?Number(r.policies_in_scope).toLocaleString()+' → '+Number(r.model_points).toLocaleString():'—'}</td>
+        <td>${r.movement_check && r.movement_check!=='—' ? `<span class="badge ${r.movement_check==='PASS'?'GREEN':(r.movement_check==='BREACH'?'RED':'')}">${esc(r.movement_check)}</span>${r.movement_policies_pct!=null?` <span style="color:var(--muted);font-size:11px">Δpol ${esc(r.movement_policies_pct)}% · ΔSA ${esc(r.movement_sa_pct)}%</span>`:''}` : '—'}</td>
+        <td>${r.grouping_check && r.grouping_check!=='—' ? `<span class="badge ${r.grouping_check==='PASS'?'GREEN':'RED'}">${esc(r.grouping_check)}</span>`:'—'}</td>
         <td style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(r.assumption_set_id||'—')}</td>
-        <td>${esc(r.signed_off_by)}</td></tr>`).join('') + `</table>`;
+        <td>${esc(r.signed_off_by)}</td></tr>`).join('') + `</table>` +
+      `<p class="sub" style="margin-top:8px;font-size:12.5px">A RED run carries no sign-off — that's the
+      control working, not a gap. Movement reconciles policy count and sum assured against the last
+      good run; Grouping proves control totals survive the policies→model-points compression.</p>`;
   }
 
   // 2 · why it went RED — latest run with rejects
@@ -307,6 +363,11 @@ async function governancePage(){
   the same tables an auditor would query directly.</div>`;
 }
 
+async function loadGov(){
+  if(!GOV){ try{ GOV = await (await fetch('api/governance')).json(); }catch(e){ GOV={runs:[]}; } }
+  return GOV;
+}
+
 async function filePage(key){
   root.innerHTML = nav('home') + `<div class="crumb"><a href="#/">LifeCast</a> /
     <a href="#/flow/model-point-feed">Model point generator</a> / file</div>
@@ -346,6 +407,7 @@ function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
+  if(parts[0]==='terms') return termsPage();
   if(parts[0]==='file' && parts[1]) return filePage(parts[1]);
   if(parts[0]==='governance') return governancePage();
   if(parts[0]==='flow' && parts[1]) return flowPage(parts[1]);

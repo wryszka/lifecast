@@ -22,13 +22,13 @@ TILES = [
   "text": "Engine output lands in Delta once; dashboard + Genie replace the pivot-table rebuild.",
   "link": "folder:03_results_and_genie"},
  {"n": "04", "title": "Scenario management",
-  "text": "Your ESG's deliveries versioned and gated — plus an illustrative QuantLib set.",
+  "text": "Economic scenario sets (your ESG provider's deliveries) versioned and gated — plus an illustrative QuantLib set.",
   "link": "folder:04_scenario_management"},
  {"n": "05", "title": "Projection migration",
   "text": "The workshop: same product in Python, tied out side by side, in seconds.",
   "link": "folder:05_projection_migration"},
  {"n": "06", "title": "Stochastic & boundaries",
-  "text": "1,000-path fan-out — and an honest map of where the hard edges are.",
+  "text": "Valuing the book across 1,000 simulated futures in parallel — and an honest map of where the hard edges are.",
   "link": "folder:06_stochastic_boundaries"},
 ]
 
@@ -41,11 +41,15 @@ FLOWS = [
  "id": "model-point-feed",
  "eyebrow": "Use case 01 — model point generator",
  "title": "Policy data → model point file, governed",
- "story": ("Every liability run starts the same way: policy admin data has to become the "
-           "model point file the existing actuarial engine reads. The engine itself is fine — "
-           "it's everything in front of it that's fragile. Below, the journey as we typically "
-           "see it run today, mapped step for step onto the same journey here: four small "
-           "chunks, each a short notebook you can open and read. The engine doesn't change at all."),
+ "story": ("Every valuation starts the same way: policy admin data has to become the model "
+           "point file the existing actuarial engine reads — the licensed software that "
+           "projects premiums and claims decades ahead to value the liabilities. Here that "
+           "means 50,000 policies grouped to ~8,200 model points by attained age, sex, smoker "
+           "status and outstanding term, as at a valuation date. The engine itself is fine — "
+           "it's everything in front of it that's fragile, and when a regulator asks 'prove "
+           "what fed this number', today nobody can. Below: the journey as we typically see "
+           "it run, mapped step for step onto the same journey here. The engine doesn't "
+           "change at all."),
  "now_intro": "How we think this runs today — tell us where your shop differs:",
  "steps": [
   {"n": "1", "title": "The feed lands",
@@ -55,17 +59,17 @@ FLOWS = [
    "live": ("The landing zone", "vol:")},
   {"n": "2", "title": "Clean & quarantine",
    "now": "An Excel workbook reshapes the extract into model points — formulas, paste areas, and one careful owner who knows its quirks.",
-   "text": "Typed, deduplicated, seven quality rules. Every reject lands in quarantine with the exact rules it failed — visible, never silent.",
+   "text": "Typed, deduplicated, rule-checked. Seven illustrative rules ship — yours drop into the same structure. Every reject lands in quarantine with the exact rules it failed: parked for repair and resubmission, never discarded.",
    "code": ("Code — same file, ~40 lines", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
    "live": ("Pipeline graph, live", "pipeline:lifecast_model_point_pipeline")},
   {"n": "3", "title": "The gate signs off",
    "now": "Validation is an eyeball check if there's time; a bad extract is usually discovered after the engine has already run.",
-   "text": "GREEN goes on the record with the assumption basis in force. RED stops the run before the model point file is touched.",
+   "text": "Control totals reconciled against the last good run (policy count, sum assured — movement-checked), grouping proven to preserve totals, and GREEN on the record with the valuation date and the basis in force. RED stops the run before the file is touched. The thresholds are yours to set.",
    "code": ("Code — gate notebook", "nb:01_model_point_pipeline/01_quality_gate"),
    "live": ("Gate history", "tbl:gld_quality_dashboard")},
   {"n": "4", "title": "The file the engine expects",
    "now": "The file is dropped on a share; the existing actuarial engine picks it up in the overnight batch. No lineage from policy to model point.",
-   "text": "Model points exported in the exact layout the engine reads today — downstream unchanged. Plus a read-only Excel extract for the eyeball check.",
+   "text": "Model points in the exact layout the engine reads — attained age, duration in force, outstanding term, valuation date — downstream unchanged. Plus a read-only Excel extract for the eyeball check.",
    "code": ("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
    "live": ("The exported file", "vol:export"),
    "peek": ("Peek inside the file — read-only", "#/file/mpf")},
@@ -76,7 +80,43 @@ FLOWS = [
    "links": [("Bad feed lever", "job:lifecast_bad_feed_day"),
              ("Overnight run", "job:lifecast_overnight_run")],
  },
+ "beat": [
+  {"do": "Run the overnight job (≈2 min — yes, the 'overnight' run).",
+   "expect": "GREEN. ~50,000 rows in, 0 quarantined, ~8,200 model points out.",
+   "say": "The gate signs off — on the record, with the valuation date, the control totals and the basis in force."},
+  {"do": "Open the Governance tab.",
+   "expect": "The GREEN row: movement 0.0% vs the last good run, grouping PASS, signed off.",
+   "say": "Which extract and which basis fed which run — recorded, not remembered."},
+  {"do": "Run the bad-feed job (defaults = inject, ≈1 min).",
+   "expect": "A deliberately corrupted feed lands next to the clean one.",
+   "say": "A corrupted extract has just arrived — exactly what happens at quarter end."},
+  {"do": "Run the overnight job again (≈2 min).",
+   "expect": "It FAILS at the quality gate — that is the success state of this demo: ~3,500 rows quarantined (≈6.5%), six rules firing.",
+   "say": "The failed run is the control working. The rejects are parked with reasons, the model point file is untouched, and the engine never sees bad data."},
+  {"do": "Back to Governance: the RED row.",
+   "expect": "No sign-off on the RED run, per-rule bars below.",
+   "say": "Nobody signs a failed gate — and the regulator can read exactly why it failed."},
+  {"do": "Run the bad-feed job with action=restore (≈3 min), then the overnight job once more.",
+   "expect": "GREEN again. The whole loop took ten minutes.",
+   "say": "Today this failure costs the actuary a morning. Here it cost one click and a coffee."},
+ ],
+ "scope": ("Deliberately one product and one feed — this is the scaffold, not your estate. "
+           "Your products, your ~140 rules and your admin systems map in during discovery; "
+           "the structure they drop into is what you just saw."),
 },
+]
+
+# ── Terms: eight client-safe one-liners — the anchor for the planned
+# learn-this-first link. ─────────────────────────────────────────────────────
+TERMS = [
+ ("Model point", "A grouped, representative policy record. ~50,000 policies compress to ~8,200 model points (by attained age, sex, smoker status, outstanding term) so the engine has less to chew on, with control totals preserved."),
+ ("Model point file (MPF)", "The fixed-layout file of model points the actuarial engine ingests. The contract between the data world and the modelling world."),
+ ("The engine", "The licensed actuarial modelling software that projects premiums, claims and expenses decades ahead to value liabilities. Runs in overnight batches. We connect to it; we don't change it."),
+ ("Basis / assumptions", "The approved set of mortality, lapse and expense tables a valuation uses. Versioned and signed off here — which basis fed which run is always on the record."),
+ ("BEL", "Best Estimate Liability — the present value of expected future outgo minus future premiums. The number the board pack is built on. For protection business it can legitimately be negative."),
+ ("ESG / scenario set", "An Economic Scenario Generator produces thousands of simulated futures (rates, equities) for market-consistent valuation. The client's ESG stays theirs — sets are versioned and gated here."),
+ ("Quarantine", "Where rows that fail quality rules go — with the exact rules they failed. Parked for repair and resubmission, never silently dropped: a rejected policy still has a liability."),
+ ("Valuation date & duration", "An in-force valuation values each policy as at a date: how long it has run (duration), the holder's attained age, and the term outstanding. Entry age alone would value everything as new business — wrong."),
 ]
 
 # ── Governance: what gets recorded for the governed process, and why. Today

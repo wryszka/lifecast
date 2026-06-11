@@ -13,7 +13,7 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import CARDS, FLOWS, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, TILES
+from content import CARDS, FLOWS, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, TERMS, TILES
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -137,6 +137,8 @@ def content():
             } for s in f["steps"]],
             "lever": {"text": f["lever"]["text"],
                       "links": [{"label": lbl, "url": resolve_link(k)} for lbl, k in f["lever"]["links"]]},
+            "beat": f["beat"],
+            "scope": f["scope"],
         })
     personas = []
     for p in PERSONAS:
@@ -155,7 +157,9 @@ def content():
         personas.append({**p, "cards": cards})
     tiles = [{**{k: v for k, v in t.items() if k != "link"},
               **({"url": resolve_link(t["link"])} if "link" in t else {})} for t in TILES]
-    return {"tiles": tiles, "flows": flows, "personas": personas, "host": HOST, "catalog": CATALOG}
+    return {"tiles": tiles, "flows": flows, "personas": personas,
+            "terms": [{"term": t, "text": x} for t, x in TERMS],
+            "host": HOST, "catalog": CATALOG}
 
 
 def _sql_one(query: str):
@@ -248,7 +252,11 @@ def governance():
                        q.verdict, q.rows_bronze, q.rows_silver, q.rows_quarantined,
                        round(100*q.quarantine_rate,2) AS quarantine_pct,
                        q.assumption_set_id, q.rule_breakdown,
-                       coalesce(s.signed_off_by, '—') AS signed_off_by
+                       coalesce(s.signed_off_by, '—') AS signed_off_by,
+                       q.valuation_date, q.policies_in_scope, q.model_points,
+                       q.movement_policies_pct, q.movement_sa_pct,
+                       coalesce(q.movement_check,'—') AS movement_check,
+                       coalesce(q.grouping_check,'—') AS grouping_check
                 FROM {T}.gld_run_quality q
                 LEFT JOIN {T}.gld_run_signoff s
                   ON q.job_run_id = s.job_run_id AND q.run_ts = s.run_ts

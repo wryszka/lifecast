@@ -81,11 +81,12 @@ t0 = time.time()
 out = []
 for mp in mps:
     in_force = float(mp.init_pols_if)
+    dur = int(round(float(mp.dur_if_y)))  # completed years in force at valuation
     pv_prem, pv_claim, pv_exp = 0.0, 0.0, 0.0
-    for t in range(int(mp.policy_term_years)):
-        age = int(mp.age_at_entry) + t
+    for t in range(int(mp.outstanding_term_years)):
+        age = int(mp.age_attained) + t
         q = qx[(age, mp.sex, mp.smoker_status)]
-        w = lapse[t + 1]
+        w = lapse[min(dur + t + 1, 40)]  # lapse by policy year, not projection year
         deaths = in_force * q
         infl = (1.0 + expense["expense_inflation_pa"]) ** t
         # premiums at start of year; claims and expenses at end of year

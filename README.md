@@ -85,8 +85,8 @@ prefixes), all files in the `lifecast_files` volume.
 | Asset | What it is |
 |---|---|
 | Job `lifecast_synthetic_foundation` | Phase 0: synthetic term book as a file-shaped policy-admin feed + the mock downstream model point extract (the before-state) + the parked bad-feed-day file |
-| Pipeline `lifecast_model_point_pipeline` | Phase 1: Auto Loader → `brz_policy_admin` → `slv_policies` (expectations) + `slv_policies_quarantine` → `gld_model_points`. Full UC lineage |
-| Job `lifecast_overnight_run` | The governed run: pipeline refresh → quality gate (RED stops the run **before** export) → model point file + Excel validation extract |
+| Pipeline `lifecast_model_point_pipeline` | Phase 1: Auto Loader → `brz_policy_admin` → `slv_policies` (expectations + duration/attained-age/outstanding-term at the valuation date) + `slv_policies_quarantine` → `gld_model_points` (attained age × outstanding term grouping). Full UC lineage |
+| Job `lifecast_overnight_run` | The governed run: pipeline refresh → quality gate (row rules + movement check vs last good run + grouping control-total proof; RED stops the run **before** export) → model point file + Excel validation extract |
 | Job `lifecast_bad_feed_day` | Demo lever: `action=inject` drops a defective feed into the landing path; `action=restore` removes it + full-refreshes |
 | `gld_run_quality` / `gld_run_signoff` / view `gld_quality_dashboard` | Gate history and sign-off — the auditable destination. Each run records the `assumption_set_id` in force (which extract *and* which basis fed which run) |
 | `asm_mortality` / `asm_lapse` / `asm_expense` + `asm_assumption_sets` + `asm_approval_log` | Phase 2: versioned assumption master with registry and append-only audit trail. UC functions `asm_active_set_id()` / `asm_*_active()` are the single read path to the approved basis |
@@ -115,7 +115,7 @@ prefixes), all files in the `lifecast_files` volume.
    *Track 1 complete — zero actuarial maths written.*
 5. **Projection migration:** run `lifecast_projection_run` — the same term product in
    Python, on the governed basis and curve, **ties out to the penny per model point**
-   (1,623/1,623) in ~0.2 seconds against a multi-hour anchor. Registered in UC, every
+   (8,185/8,185, duration-aware) in ~0.2 seconds against a multi-hour anchor. Registered in UC, every
    run on the record. *The workshop beat: the client writes the product logic.*
 6. **Stochastic + boundaries:** run `lifecast_stochastic_run` twice — once on the vendor
    set, once on the QuantLib set. 1,000 path valuations in ~20s; the MLflow reconciliation

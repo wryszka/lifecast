@@ -81,9 +81,18 @@ def policy_admin_typed():
     dedupe_window = Window.partitionBy("policy_id").orderBy(
         F.col("_ingested_at").asc(), F.col("_source_file").asc()
     )
-    return df.withColumn("_row_num", F.row_number().over(dedupe_window)).withColumn(
-        "age_at_entry",
-        F.floor(F.datediff("inception_date", "dob") / F.lit(365.25)).cast("int"),
+    return (
+        df.withColumn("_row_num", F.row_number().over(dedupe_window))
+        .withColumn("age_at_entry",
+                    F.floor(F.datediff("inception_date", "dob") / F.lit(365.25)).cast("int"))
+        # Valuation-date-aware fields: an in-force valuation needs duration,
+        # attained age and outstanding term — not entry age and full term.
+        .withColumn("valuation_date", F.current_date())
+        .withColumn("duration_years",
+                    F.floor(F.datediff(F.current_date(), "inception_date") / F.lit(365.25)).cast("int"))
+        .withColumn("age_attained", (F.col("age_at_entry") + F.col("duration_years")).cast("int"))
+        .withColumn("outstanding_term_years",
+                    (F.col("policy_term_years") - F.col("duration_years")).cast("int"))
     )
 
 
@@ -117,16 +126,18 @@ def slv_policies_quarantine():
 
 @dlt.table(
     name="gld_model_points",
-    comment="Grouped model points in the downstream MPF layout — one row per (age at entry, sex, smoker, term, premium frequency) cell of the in-force book. Exported unchanged for the downstream liability model.",
+    comment="Grouped model points in the downstream MPF layout — one row per (attained age, sex, smoker, outstanding term, premium frequency) cell of the in-force book at the valuation date. Exported unchanged for the downstream liability model.",
 )
 def gld_model_points():
-    group_cols = ["age_at_entry", "sex", "smoker_status", "policy_term_years", "premium_frequency"]
+    group_cols = ["age_attained", "sex", "smoker_status", "outstanding_term_years", "premium_frequency"]
     grouped = (
         spark.read.table("slv_policies")
-        .filter(F.col("policy_status") == "INFORCE")
+        .filter((F.col("policy_status") == "INFORCE") & (F.col("outstanding_term_years") >= 1))
         .groupBy(*group_cols)
         .agg(
             F.count("*").alias("init_pols_if"),
+            F.max("valuation_date").alias("valuation_date"),
+            F.round(F.avg("duration_years"), 1).alias("dur_if_y"),
             F.round(F.avg("sum_assured"), 0).cast("bigint").alias("sum_assured"),
             F.round(F.avg("annual_premium"), 2).alias("annual_premium"),
         )
@@ -137,10 +148,12 @@ def gld_model_points():
         .select(
             "mp_num",
             "prod_cd",
-            "age_at_entry",
+            "valuation_date",
+            "age_attained",
             "sex",
             "smoker_status",
-            "policy_term_years",
+            "dur_if_y",
+            "outstanding_term_years",
             "premium_frequency",
             "sum_assured",
             "annual_premium",
