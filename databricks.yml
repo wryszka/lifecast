@@ -21,6 +21,10 @@ variables:
   catalog:
     description: "Target UC catalog (existing — the bundle never creates a catalog). The only edit needed to move workspaces."
     default: lr_dev_aws_us_catalog
+  warehouse_id:
+    description: "SQL warehouse for the Cockpit's read-only status pulls — resolved by name, no hardcoded ID."
+    lookup:
+      warehouse: "Serverless Starter Warehouse" 
 
 targets:
   dev:

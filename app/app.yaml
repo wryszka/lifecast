@@ -1,0 +1,9 @@
+# LifeCast Cockpit — thin presenter's cockpit (no business logic).
+command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+env:
+  # Same sed-portability as the notebooks (README "Install — one edit").
+  - name: CATALOG
+    value: "lr_dev_aws_us_catalog"
+  # Bound app resource (resources/lifecast_app.yml); valueFrom is camelCase.
+  - name: WAREHOUSE_ID
+    valueFrom: sql-warehouse

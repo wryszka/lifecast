@@ -6,7 +6,7 @@
 | **Entity** | Bricksurance Life — synthetic life / savings / protection insurer, sister to Bricksurance SE & Re |
 | **Name token** | `lifecast` — used as the single prefix across every asset (see §10) |
 | **App** | `lifecast-workbench` — the LifeCast Cockpit (see §9) |
-| **Status** | All phases 0–6 built & verified on dev. Remaining: the Cockpit app (§9) + GTM wrap (§12.2–12.3). |
+| **Status** | All phases 0–6 + the Cockpit (§9) built & verified on dev. Remaining: GTM wrap (§12.2–12.3). |
 | **Last updated** | 11 June 2026 |
 
 > Supersedes `ACTUARIAL_MODELLING_WORKBENCH_BUILD_BRIEF.md`.

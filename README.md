@@ -22,6 +22,7 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 4 | ESG / scenario management | ✅ Built |
 | 5 | Projection migration POC | ✅ Built |
 | 6 | Stochastic + boundaries | ✅ Built |
+| — | LifeCast Cockpit (app) | ✅ Built |
 
 ## Install — one edit
 
@@ -32,13 +33,20 @@ workspace host comes from your CLI profile. Everything is serverless.
 Notebook `catalog` widgets carry the same default so hands-on interactive runs
 work out of the box (jobs always pass `${var.catalog}`). Porting: change the
 bundle variable, then update the widget defaults in one pass:
-`grep -rl lr_dev_aws_us_catalog 0*/ | xargs sed -i '' 's/lr_dev_aws_us_catalog/<your_catalog>/'`
+`grep -rl lr_dev_aws_us_catalog 0*/ app/ | xargs sed -i '' 's/lr_dev_aws_us_catalog/<your_catalog>/'`
 
 ```bash
 databricks bundle deploy -t dev --profile <PROFILE>
 databricks bundle run lifecast_synthetic_foundation -t dev --profile <PROFILE>   # once
 databricks bundle run lifecast_overnight_run -t dev --profile <PROFILE>
+databricks bundle run lifecast_workbench -t dev --profile <PROFILE>              # start the Cockpit
 ```
+
+After first app start, grant its service principal read access (one-time;
+SP id from `databricks apps get lifecast-workbench`): `USE CATALOG` /
+`USE SCHEMA` / `SELECT` on `<catalog>.lifecast` for the status tiles, and
+`CAN_VIEW` on the `lifecast_*` jobs and pipelines for deep-link resolution
+(links degrade gracefully to path URLs without them).
 
 All workspace assets land **directly in `/Workspace/Shared/lifecast`** — a live
 hands-on system organised by use case, simplest first. Each folder is one user
@@ -91,6 +99,7 @@ prefixes), all files in the `lifecast_files` volume.
 | Job `lifecast_esg_illustrative` | Phase 4 illustrate: EIOPA RFR ingest (`esg_rfr_curve`, reused from the Excel accelerator) → QuantLib HW1F + Black-Scholes → `esg_hull_white_paths`, AVAILABLE; calibration + martingale diagnostics in MLflow (`/Shared/lifecast/04_scenario_management/esg_calibration`) |
 | Job `lifecast_projection_run` | Phase 5 (the expand): legacy baseline per model point → Python projection on governed inputs (`gld_term_projection`, MLflow-tracked, UC model `lifecast_term_projection` @champion) → per-MP tie-out gate (`gld_projection_validation`, £0.01 tolerance, drift fails the run) |
 | Job `lifecast_stochastic_run` | Phase 6: the term book across 1,000 governed scenario paths via `mapInPandas` (`gld_stochastic_bel`); distribution + curve-reconciliation metric to MLflow — run it on both scenario sets to show the basis difference. Explainers (vectorisation boundary, nested-stochastic costing, ESG plug-in) live in the folder |
+| App `lifecast-workbench` — **the LifeCast Cockpit** | The presenter's cockpit (brief §9): persona → question → card (proves / where it lives / build & control / Go deep links / today→tomorrow), plus four read-only status tiles pulled live from UC. Thin by design — no business logic; every Go button opens the real asset. Lets **any SA run this demo, not just the author** |
 
 ## The demo beat
 

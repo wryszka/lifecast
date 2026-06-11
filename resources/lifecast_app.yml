@@ -1,0 +1,15 @@
+# The LifeCast Cockpit — lifecast-workbench (the one hyphen exception: apps
+# need URL-safe names). A presenter's cockpit: persona -> task -> card with
+# deep links and read-only status pulls. No business logic.
+resources:
+  apps:
+    lifecast_workbench:
+      name: lifecast-workbench
+      description: "LifeCast Cockpit — persona/task/card presenter's cockpit for the Bricksurance Life demo. Thin: deep links + read-only status."
+      source_code_path: ../app
+      resources:
+        - name: sql-warehouse
+          description: "Read-only status pulls from ${var.catalog}.lifecast"
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
