@@ -4,8 +4,9 @@
 # Databricks-provided AI base environments aren't enabled on this workspace yet
 # (only custom yaml paths are supported); swap this for the AI base env ID when
 # they GA.
+# mlflow-skinny ships in the v5 base environment — only genuinely missing
+# libraries are added here (verified empirically against a clean v5 env).
 environment_version: '5'
 dependencies:
   - QuantLib
-  - mlflow-skinny
   - openpyxl

@@ -15,11 +15,11 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install QuantLib mlflow-skinny --quiet
+# MAGIC %pip install QuantLib --quiet
 
 # COMMAND ----------
 
-# MAGIC %md *(mlflow installed explicitly — the serverless base environment is slim, and interactive sessions can pin an environment version that doesn't include it)*
+# MAGIC %md *(mlflow ships in the v5 base environment — run this notebook on env v5 or the `environments/lifecast_ml.yml` base environment)*
 
 # COMMAND ----------
 
