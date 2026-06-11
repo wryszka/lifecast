@@ -1,5 +1,9 @@
 """LifeCast — Phase 1: the governed model point pipeline.
 
+This file is the SOURCE of pipeline `lifecast_model_point_pipeline` — it runs
+inside that pipeline (triggered by job `lifecast_overnight_run`), not as a
+notebook. Open it to read how the pipeline is built.
+
 Lakeflow Declarative Pipeline (serverless), publishing into
 ${catalog}.lifecast. Medallion via table prefix in the single schema:
 

@@ -26,7 +26,11 @@ targets:
   dev:
     default: true
     workspace:
-      # Pinned under /Workspace/Shared so every asset is discoverable by any SA
-      # (not buried in a per-user path).
-      root_path: /Workspace/Shared/lifecast/${bundle.target}
+      # Live hands-on system: humans open /Workspace/Shared/lifecast and see
+      # the numbered notebooks 00->08 directly, first to last. Bundle internals
+      # (state, artifacts) are tucked into .bundle/ underneath.
+      root_path: /Workspace/Shared/lifecast
+      file_path: ${workspace.root_path}
+      state_path: ${workspace.root_path}/.bundle/state
+      artifact_path: ${workspace.root_path}/.bundle/artifacts
     # To move to another workspace: add a target here and override `catalog`.

@@ -33,9 +33,25 @@ databricks bundle run lifecast_synthetic_foundation -t dev --profile <PROFILE>  
 databricks bundle run lifecast_overnight_run -t dev --profile <PROFILE>
 ```
 
-All workspace assets land under `/Workspace/Shared/lifecast/dev`, all data in
-`<catalog>.lifecast` (single schema; medallion via `brz_`/`slv_`/`gld_` prefixes),
-all files in the `lifecast_files` volume.
+All workspace assets land **directly in `/Workspace/Shared/lifecast`** — a live
+hands-on system, not a buried bundle tree. The numbered notebooks read first to last:
+
+```
+/Workspace/Shared/lifecast/
+  00_synthetic_policy_book      Phase 0 — generate the synthetic term book + bad-feed file
+  01_prophet_extract_mock      Phase 0 — the before-state model point extract
+  02_model_point_pipeline.py   Phase 1 — SOURCE of the pipeline (runs inside it, not as a notebook)
+  03_quality_gate              Phase 1 — gate verdict, sign-off, RED stops the run
+  04_export_model_point_file   Phase 1 — MPF export + Excel validation extract
+  05_bad_feed_day              demo lever — inject / restore the bad feed
+  06_assumption_master         Phase 2 — asm_ tables, UC functions, seed basis, Excel template
+  07_excel_entry_roundtrip     Phase 2 — maker: the Excel round-trip, headless
+  08_assumption_approval       Phase 2 — checker: approve / reject, audited
+  .bundle/                     bundle internals (state, artifacts) — ignore
+```
+
+All data in `<catalog>.lifecast` (single schema; medallion via `brz_`/`slv_`/`gld_`
+prefixes), all files in the `lifecast_files` volume.
 
 ## What's here
 
