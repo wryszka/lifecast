@@ -71,16 +71,24 @@ except Exception:
 
 run_ts = datetime.datetime.now()
 
+# Phase 2 tie-in: stamp the approved assumption basis onto the run record, so
+# every run is reproducible — which extract AND which basis fed it.
+try:
+    assumption_set_id = spark.sql(f"SELECT {FQ}.asm_active_set_id()").first()[0]
+except Exception:
+    assumption_set_id = None  # Phase 2 assets not installed yet
+
 quality_schema = (
     "run_ts TIMESTAMP, job_run_id STRING, rows_bronze BIGINT, rows_silver BIGINT, "
     "rows_quarantined BIGINT, model_points BIGINT, quarantine_rate DOUBLE, "
-    "red_threshold DOUBLE, rule_breakdown STRING, verdict STRING"
+    "red_threshold DOUBLE, rule_breakdown STRING, verdict STRING, assumption_set_id STRING"
 )
 spark.createDataFrame(
     [(run_ts, job_run_id, rows_bronze, rows_silver, rows_quarantined, model_points,
-      float(quarantine_rate), QUARANTINE_RATE_RED, json.dumps(rule_breakdown), verdict)],
+      float(quarantine_rate), QUARANTINE_RATE_RED, json.dumps(rule_breakdown), verdict,
+      assumption_set_id)],
     quality_schema,
-).write.mode("append").saveAsTable(f"{FQ}.gld_run_quality")
+).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{FQ}.gld_run_quality")
 
 spark.sql(f"""
     CREATE OR REPLACE VIEW {FQ}.gld_quality_dashboard

@@ -6,7 +6,7 @@
 | **Entity** | Bricksurance Life — synthetic life / savings / protection insurer, sister to Bricksurance SE & Re |
 | **Name token** | `lifecast` — used as the single prefix across every asset (see §10) |
 | **App** | `lifecast-workbench` — the LifeCast Cockpit (see §9) |
-| **Status** | Brief. Phase 0 next. |
+| **Status** | Phases 0–2 built & verified on dev. Phase 3 next. |
 | **Last updated** | 11 June 2026 |
 
 > Supersedes `ACTUARIAL_MODELLING_WORKBENCH_BUILD_BRIEF.md`.
@@ -90,9 +90,9 @@ Partners (Milliman, Moody's, boutique quant firms) slot in at the projection-log
 
 | Phase | Name | Track | Ships in core POC? | Status |
 |---|---|---|---|---|
-| 0 | Synthetic foundation | — | Yes | Not started |
-| 1 | Model point pipeline | 1 — land | Yes | Not started |
-| 2 | Assumption governance | 1 — land | Yes | Not started |
+| 0 | Synthetic foundation | — | Yes | ✅ Built |
+| 1 | Model point pipeline | 1 — land | Yes | ✅ Built |
+| 2 | Assumption governance | 1 — land | Yes | ✅ Built |
 | 3 | Results + AI/BI + Genie | 1 — land | Yes | Not started |
 | 4 | ESG / scenario management | bridge | Demand-driven | Not started |
 | 5 | Projection migration POC | 2 — expand | Demand-driven | Not started |

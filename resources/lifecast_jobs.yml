@@ -23,6 +23,9 @@ resources:
             - task_key: policy_book
           notebook_task:
             notebook_path: ../src/notebooks/01_prophet_extract_mock.py
+        - task_key: assumption_master
+          notebook_task:
+            notebook_path: ../src/notebooks/05_assumption_master.py
 
     # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
     # -> export. A bad extract fails the gate and STOPS the run before the
@@ -49,6 +52,47 @@ resources:
             - task_key: quality_gate
           notebook_task:
             notebook_path: ../src/notebooks/03_export_model_point_file.py
+
+    # Phase 2 — the maker step. Runs exactly the SQL the Excel template submits
+    # via DATABRICKS.SQL: drafts a new basis from the approved one (smoker qx
+    # loading), registers it, submits it for approval. Ends PENDING_APPROVAL.
+    lifecast_assumption_entry:
+      name: lifecast_assumption_entry
+      description: "Phase 2: assumption entry (Excel round-trip, headless) — drafts a shocked basis from the approved one and submits it for approval."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: basis_name
+          default: "Best Estimate — smoker loading review"
+        - name: smoker_loading_pct
+          default: "10"
+      tasks:
+        - task_key: assumption_entry
+          notebook_task:
+            notebook_path: ../src/notebooks/06_excel_entry_roundtrip.py
+
+    # Phase 2 — the checker step. approve: new basis live, old one SUPERSEDED;
+    # reject: current basis stays in force. Every action lands in asm_approval_log.
+    lifecast_assumption_approval:
+      name: lifecast_assumption_approval
+      description: "Phase 2: assumption approval — approve or reject a PENDING_APPROVAL basis, with full audit trail."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: assumption_set_id
+          default: latest_pending
+        - name: decision
+          default: approve
+        - name: note
+          default: "Reviewed against experience analysis."
+      tasks:
+        - task_key: assumption_approval
+          notebook_task:
+            notebook_path: ../src/notebooks/07_assumption_approval.py
 
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
