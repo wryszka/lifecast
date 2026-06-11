@@ -229,7 +229,9 @@ Designed to move and reinstall in any workspace with **one edit**.
 
   targets:
     dev:
-      mode: development
+      # No `mode: development` — it prefixes every resource name (including the
+      # UC schema) with dev_<user>_, breaking the naming hard rule. One version,
+      # exact names, everywhere.
       default: true
       workspace:
         root_path: /Workspace/Shared/lifecast/${bundle.target}
