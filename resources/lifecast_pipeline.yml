@@ -15,3 +15,18 @@ resources:
         catalog: ${var.catalog}
         volume_root: /Volumes/${var.catalog}/lifecast/lifecast_files
         project: lifecast
+
+    # Phase 3 — the governed results layer: the liability model's quarterly CSV
+    # dumps land in Delta once; Genie + the dashboard query it.
+    lifecast_results_pipeline:
+      name: lifecast_results_pipeline
+      serverless: true
+      catalog: ${var.catalog}
+      schema: lifecast
+      libraries:
+        - file:
+            path: ../03_results_and_genie/01_results_pipeline.py
+      configuration:
+        catalog: ${var.catalog}
+        volume_root: /Volumes/${var.catalog}/lifecast/lifecast_files
+        project: lifecast

@@ -18,7 +18,7 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 0 | Synthetic foundation | ✅ Built |
 | 1 | Model point pipeline | ✅ Built |
 | 2 | Assumption governance | ✅ Built |
-| 3 | Results + AI/BI + Genie | Not started |
+| 3 | Results + AI/BI + Genie | ✅ Built |
 | 4–6 | Demand-driven | Not started |
 
 ## Install — one edit
@@ -46,6 +46,10 @@ story with its own README and numbered assets in run order:
     02_export_model_point_file · 03_bad_feed_day (demo lever)
   02_assumption_governance/  use case 2 — versioned basis, maker/checker, Excel round-trip
     00_assumption_master · 01_excel_entry_roundtrip · 02_assumption_approval
+  03_results_and_genie/      use case 3 — governed results layer, dashboard, Genie (end of Track 1)
+    00_prophet_results_mock · 01_results_pipeline.py (pipeline source)
+    02_cfo_export · 03_create_dashboard · 04_create_genie_space
+    + LifeCast — BEL Movement (AI/BI dashboard lives here)
   .bundle/                   bundle internals — ignore
 ```
 
@@ -65,6 +69,8 @@ prefixes), all files in the `lifecast_files` volume.
 | Job `lifecast_assumption_entry` | The maker step — runs exactly the SQL the Excel template submits via `DATABRICKS.SQL` (drafts a shocked basis, submits for approval) |
 | Job `lifecast_assumption_approval` | The checker step — approve (old basis → SUPERSEDED) or reject, fully audited. View `asm_governance_dashboard` |
 | `lifecast_files/excel/lifecast_assumption_entry.xlsx` | The Excel connection point: live `DATABRICKS.SQL` reads of the approved basis + the submit-shock entry sheet |
+| Pipeline `lifecast_results_pipeline` + job `lifecast_results_run` | Phase 3: quarterly results CSV dumps → `brz_prophet_results` → `slv_projection_results` → `gld_results_by_product` + `gld_bel_movement`; then CFO export (Excel+CSV board pack), dashboard publish, Genie space |
+| `LifeCast — BEL Movement` dashboard · `LifeCast — Results` Genie space | The reporting destinations: counters/trend/movement live from the governed layer; Genie answers "BEL movement vs last quarter by product line" |
 
 ## The demo beat
 
@@ -74,7 +80,11 @@ prefixes), all files in the `lifecast_files` volume.
    stops, quarantine shows exactly which rows failed which rules. *The morning is no
    longer hostage to a broken extract.*
 3. `lifecast_bad_feed_day` with `action=restore` → next run **GREEN** again.
-4. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
+4. **Results & Genie:** run `lifecast_results_run`, open the dashboard, then ask Genie
+   *"Which product line drove the BEL increase in the latest quarter?"* — GROUP_PROTECTION,
+   +£8.8m, straight off the governed layer. CFO export lands in `export/board_pack/`.
+   *Track 1 complete — zero actuarial maths written.*
+5. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
    a +10% smoker loading becomes a draft basis, PENDING_APPROVAL. Run
    `lifecast_assumption_approval` → new basis live, old one SUPERSEDED, every step in
    `asm_approval_log`. The next overnight run records the new `assumption_set_id`.

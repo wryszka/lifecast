@@ -26,6 +26,9 @@ resources:
         - task_key: assumption_master
           notebook_task:
             notebook_path: ../02_assumption_governance/00_assumption_master.py
+        - task_key: prophet_results
+          notebook_task:
+            notebook_path: ../03_results_and_genie/00_prophet_results_mock.py
 
     # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
     # -> export. A bad extract fails the gate and STOPS the run before the
@@ -93,6 +96,37 @@ resources:
         - task_key: assumption_approval
           notebook_task:
             notebook_path: ../02_assumption_governance/02_assumption_approval.py
+
+    # Phase 3 — the quarterly results run: ingest the liability model's CSV
+    # dumps into the governed results layer, refresh the CFO export, keep the
+    # dashboard and Genie space in place (both tasks idempotent).
+    lifecast_results_run:
+      name: lifecast_results_run
+      description: "Phase 3: results run — refresh the governed results layer, export the board pack (Excel+CSV), publish the LifeCast — BEL Movement dashboard, ensure the LifeCast — Results Genie space."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      tasks:
+        - task_key: refresh_results
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.lifecast_results_pipeline.id}
+        - task_key: cfo_export
+          depends_on:
+            - task_key: refresh_results
+          notebook_task:
+            notebook_path: ../03_results_and_genie/02_cfo_export.py
+        - task_key: publish_dashboard
+          depends_on:
+            - task_key: refresh_results
+          notebook_task:
+            notebook_path: ../03_results_and_genie/03_create_dashboard.py
+        - task_key: genie_space
+          depends_on:
+            - task_key: refresh_results
+          notebook_task:
+            notebook_path: ../03_results_and_genie/04_create_genie_space.py
 
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
