@@ -28,7 +28,9 @@ One token, `lifecast`, on every named object. This is how LifeCast stays disting
 - Pin `workspace.root_path` under `/Workspace/Shared/lifecast/` so all assets are discoverable by any SA (not per-user paths).
 - Schema fixed (`lifecast`), only catalog varies.
 - No hardcoded workspace URLs or absolute IDs. Everything derives from the bundle target + `catalog`.
+- Notebook `catalog` widgets default to the dev catalog so interactive runs work out of the box (jobs always pass `${var.catalog}`). When porting, update the widget default across notebooks in one sed pass.
 - Serverless throughout. Reinstall: `databricks bundle deploy -t <target>`.
+- Serverless base env is slim: any non-base library a notebook needs (openpyxl, QuantLib, mlflow) gets an explicit `%pip install` cell — never rely on the ambient environment version.
 
 ## The app — hard rule
 

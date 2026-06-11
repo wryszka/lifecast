@@ -28,6 +28,11 @@ The target UC catalog is the **only** thing that changes between workspaces
 (`databricks.yml`, variable `catalog`, default `lr_dev_aws_us_catalog`). The
 workspace host comes from your CLI profile. Everything is serverless.
 
+Notebook `catalog` widgets carry the same default so hands-on interactive runs
+work out of the box (jobs always pass `${var.catalog}`). Porting: change the
+bundle variable, then update the widget defaults in one pass:
+`grep -rl lr_dev_aws_us_catalog 0*/ | xargs sed -i '' 's/lr_dev_aws_us_catalog/<your_catalog>/'`
+
 ```bash
 databricks bundle deploy -t dev --profile <PROFILE>
 databricks bundle run lifecast_synthetic_foundation -t dev --profile <PROFILE>   # once

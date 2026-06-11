@@ -14,7 +14,9 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "")
+# Default catalog for interactive use (jobs always pass ${var.catalog}).
+# Porting to another workspace: change once here or via sed across notebooks.
+dbutils.widgets.text("catalog", "lr_dev_aws_us_catalog")
 dbutils.widgets.text("basis_name", "Best Estimate — smoker loading review")
 dbutils.widgets.text("smoker_loading_pct", "10")
 CATALOG = dbutils.widgets.get("catalog")

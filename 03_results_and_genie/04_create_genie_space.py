@@ -13,7 +13,9 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "")
+# Default catalog for interactive use (jobs always pass ${var.catalog}).
+# Porting to another workspace: change once here or via sed across notebooks.
+dbutils.widgets.text("catalog", "lr_dev_aws_us_catalog")
 CATALOG = dbutils.widgets.get("catalog")
 assert CATALOG, "Pass the target catalog via the `catalog` job parameter / widget."
 

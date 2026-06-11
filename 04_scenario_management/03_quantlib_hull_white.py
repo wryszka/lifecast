@@ -15,11 +15,17 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install QuantLib --quiet
+# MAGIC %pip install QuantLib mlflow-skinny --quiet
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "")
+# MAGIC %md *(mlflow installed explicitly — the serverless base environment is slim, and interactive sessions can pin an environment version that doesn't include it)*
+
+# COMMAND ----------
+
+# Default catalog for interactive use (jobs always pass ${var.catalog}).
+# Porting to another workspace: change once here or via sed across notebooks.
+dbutils.widgets.text("catalog", "lr_dev_aws_us_catalog")
 dbutils.widgets.text("n_scenarios", "1000")
 dbutils.widgets.text("hw_a", "0.03")          # mean reversion
 dbutils.widgets.text("hw_sigma", "0.009")     # short-rate vol
