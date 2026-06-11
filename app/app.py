@@ -13,7 +13,7 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import CARDS, PERSONAS
+from content import CARDS, FLOWS, PERSONAS
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -124,6 +124,19 @@ def resolve_link(key: str) -> str:
 # ── API ──────────────────────────────────────────────────────────────────────
 @app.get("/api/content")
 def content():
+    flows = []
+    for f in FLOWS:
+        flows.append({
+            "id": f["id"], "eyebrow": f["eyebrow"], "title": f["title"], "story": f["story"],
+            "today": f["today"], "today_note": f["today_note"],
+            "steps": [{
+                "n": s["n"], "title": s["title"], "text": s["text"],
+                "code": {"label": s["code"][0], "url": resolve_link(s["code"][1])},
+                "live": {"label": s["live"][0], "url": resolve_link(s["live"][1])},
+            } for s in f["steps"]],
+            "lever": {"text": f["lever"]["text"],
+                      "links": [{"label": lbl, "url": resolve_link(k)} for lbl, k in f["lever"]["links"]]},
+        })
     personas = []
     for p in PERSONAS:
         cards = []
@@ -139,7 +152,7 @@ def content():
                 "tomorrow": c["tomorrow"],
             })
         personas.append({**p, "cards": cards})
-    return {"personas": personas, "host": HOST, "catalog": CATALOG}
+    return {"flows": flows, "personas": personas, "host": HOST, "catalog": CATALOG}
 
 
 def _sql_one(query: str):

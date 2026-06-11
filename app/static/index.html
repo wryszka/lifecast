@@ -61,6 +61,39 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .tt .tag{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px}
 .tt .today .tag{color:var(--amber)} .tt .tomorrow .tag{color:var(--green)}
 .foot{margin-top:36px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+/* flow page */
+.flow-h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 8px}
+.story{color:var(--ink);max-width:760px;font-size:15px}
+.todaybar{margin-top:22px;background:var(--amber-bg);border:1px solid #fedf89;border-radius:12px;padding:14px 18px}
+.todaybar .tag{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.todaychain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.todaychain .pill{background:#fff;border:1px solid #fedf89;border-radius:999px;padding:4px 12px;font-size:12px;color:#7a5300}
+.todaychain .a{color:#d6a946;font-weight:700}
+.todaynote{margin-top:8px;font-size:12px;color:var(--amber)}
+.steps{display:flex;gap:0;margin-top:18px;align-items:stretch}
+.step{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      display:flex;flex-direction:column;min-width:0}
+.step .num{width:26px;height:26px;border-radius:8px;background:var(--v50);color:var(--v);
+           font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+.step h3{font-size:15px;font-weight:700;margin:10px 0 6px}
+.step p{font-size:12.5px;color:var(--muted);flex:1}
+.step .lnk{display:block;font-size:12px;font-weight:600;margin-top:6px}
+.steparrow{align-self:center;color:var(--v);font-size:20px;font-weight:800;padding:0 8px;flex:0 0 auto}
+.lever{margin-top:18px;background:var(--v50);border:1px solid var(--v100);border-radius:12px;
+       padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.lever .tag{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--v);display:block;margin-bottom:4px}
+.lever p{font-size:13px;max-width:560px}
+.lever .gobtns{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:12px}
+.chip b{font-weight:700}
+.chip.GREEN b,.chip.TIES_OUT b{color:var(--green)} .chip.RED b,.chip.DRIFT b{color:#b42318}
+.personarow{margin-top:26px}
+.personarow .plinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.plink{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;
+       font-weight:600;font-size:13px;color:var(--ink)}
+.plink:hover{border-color:var(--v);color:var(--v)}
+@media(max-width:820px){.steps{flex-direction:column}.steparrow{transform:rotate(90deg);padding:4px 0;align-self:flex-start;margin-left:24px}}
 @media(max-width:640px){.tt{grid-template-columns:1fr}}
 </style>
 </head>
@@ -83,17 +116,43 @@ function header(crumbs){
 }
 
 function landing(){
-  const tiles = STATUS ? `<div class="grid g4">`+STATUS.tiles.map(t=>
-    `<div class="card tile"><div class="lbl">${esc(t.label)}</div>
-     <div class="val ${esc(t.value)}">${esc(t.value)}</div><div class="det">${esc(t.detail)}</div></div>`).join('')+`</div>`
-    : '<p class="sub" style="margin-top:18px">Loading live status…</p>';
-  const personas = `<div class="grid g2">`+DATA.personas.map(p=>
-    `<div class="card persona" onclick="location.hash='#/p/${p.id}'">
-       <div class="eyebrow">Persona</div><h2>${esc(p.title)}</h2><p>${esc(p.blurb)}</p>
-       <div class="go">${p.cards.length} questions →</div></div>`).join('')+`</div>`;
-  root.innerHTML = header('') + tiles + personas +
-   `<div class="foot">Live status pulled read-only from <b>${esc(DATA.catalog)}.lifecast</b>.
-    The cockpit never simulates a business process — every Go button opens the real Databricks asset.</div>`;
+  const f = DATA.flows[0];
+  const todayChain = f.today.map((s,i)=>
+    `<span class="pill">${esc(s)}</span>${i<f.today.length-1?'<span class="a">→</span>':''}`).join('');
+  const steps = f.steps.map((s,i)=>
+    `<div class="step"><div class="num">${esc(s.n)}</div><h3>${esc(s.title)}</h3>
+       <p>${esc(s.text)}</p>
+       <a class="lnk" href="${s.code.url}" target="_blank">${esc(s.code.label)} ↗</a>
+       <a class="lnk" href="${s.live.url}" target="_blank">${esc(s.live.label)} ↗</a></div>` +
+    (i<f.steps.length-1?'<div class="steparrow">→</div>':'')).join('');
+  const chips = STATUS && STATUS.tiles.length ? `<div class="chips">`+STATUS.tiles.map(t=>
+    `<span class="chip ${esc(t.value)}">${esc(t.label)}: <b>${esc(t.value)}</b></span>`).join('')+`</div>` : '';
+  const plinks = DATA.personas.map(p=>
+    `<a class="plink" href="#/p/${p.id}">${esc(p.title)} · ${p.cards.length} questions</a>`).join('');
+  root.innerHTML = `
+  <div class="eyebrow">Bricksurance Life · LifeCast</div>
+  <h1 class="flow-h2">${esc(f.title)}</h1>
+  <p class="story">${esc(f.story)}</p>
+  <div class="disclaimer">About this demo — Bricksurance Life is fictional; every figure is synthetic
+  and illustrative. No client data, no pricing logic, no actuarial methodology.</div>
+
+  <div class="todaybar"><span class="tag">Today</span>
+    <div class="todaychain">${todayChain}</div>
+    <div class="todaynote">${esc(f.today_note)}</div></div>
+
+  <div class="section" style="margin-top:24px"><span class="eyebrow">The same journey here — four small chunks, code one click away</span></div>
+  <div class="steps">${steps}</div>
+
+  <div class="lever"><div><span class="tag">Prove it live</span><p>${esc(f.lever.text)}</p></div>
+    <div class="gobtns">${f.lever.links.map(x=>`<a class="btn" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}</div></div>
+
+  ${chips}
+
+  <div class="personarow"><span class="eyebrow">Presenting to someone specific?</span>
+    <div class="plinks">${plinks}</div></div>
+
+  <div class="foot">Status pulled read-only from <b>${esc(DATA.catalog)}.lifecast</b>. This cockpit never
+  simulates a business process — every link opens the real Databricks asset.</div>`;
 }
 
 function personaPage(pid){

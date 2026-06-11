@@ -8,6 +8,50 @@ app.py resolves into URLs (path-based where possible, ID-resolved best-effort).
 No business logic lives here — curated structure and short annotations only.
 """
 
+# ── Flows: the story-first presentation. Landing = the first flow. ──────────
+# Each step is one small chunk with the code one click away. Copy never names
+# a competitor (hard rule) — "your liability engine" carries the contrast.
+FLOWS = [
+{
+ "id": "model-point-feed",
+ "eyebrow": "The first flow — start here",
+ "title": "Policy data → model point file, governed",
+ "story": ("Every liability run starts the same way: policy admin data has to become a "
+           "model point file. Today that means a SQL extract, an Excel transform and an "
+           "overnight batch nobody can see inside — and a broken feed is discovered at 9am, "
+           "by the actuary whose morning it just ate. Here the same journey is four small "
+           "steps. Each one is a short notebook you can open and read. The liability engine "
+           "downstream doesn't change at all."),
+ "today": ["Policy admin", "SQL extract", "Excel transform", "File share",
+           "Overnight batch", "“Why do the numbers look wrong?”"],
+ "today_note": "no lineage · no gate · validation by eyeball · one person knows how it works",
+ "steps": [
+  {"n": "1", "title": "The feed lands",
+   "text": "The nightly policy CSV drops on a governed volume and is ingested as-landed — bronze keeps the untouched record of what arrived.",
+   "code": ("Code — pipeline source", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
+   "live": ("The landing zone", "vol:")},
+  {"n": "2", "title": "Clean & quarantine",
+   "text": "Typed, deduplicated, seven quality rules. Every reject lands in quarantine with the exact rules it failed — visible, never silent.",
+   "code": ("Code — same file, ~40 lines", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
+   "live": ("Pipeline graph, live", "pipeline:lifecast_model_point_pipeline")},
+  {"n": "3", "title": "The gate signs off",
+   "text": "GREEN goes on the record with the assumption basis in force. RED stops the run before the model point file is touched.",
+   "code": ("Code — gate notebook", "nb:01_model_point_pipeline/01_quality_gate"),
+   "live": ("Gate history", "tbl:gld_quality_dashboard")},
+  {"n": "4", "title": "The file your engine expects",
+   "text": "Model points exported in the exact legacy layout — downstream runs unchanged. Plus a read-only Excel extract for the eyeball check.",
+   "code": ("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
+   "live": ("The exported file", "vol:export")},
+ ],
+ "lever": {
+   "text": "Break it in front of them: inject a deliberately bad feed, run the overnight job, "
+           "watch the gate go RED and stop the run — then restore and run it GREEN.",
+   "links": [("Bad feed lever", "job:lifecast_bad_feed_day"),
+             ("Overnight run", "job:lifecast_overnight_run")],
+ },
+},
+]
+
 PERSONAS = [
     {"id": "actuary", "title": "Actuary",
      "blurb": "Owns the methodology and the numbers. Wants tie-outs, governed assumptions, "
