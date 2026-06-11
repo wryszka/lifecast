@@ -67,7 +67,8 @@ FLOWS = [
    "now": "The file is dropped on a share; the existing actuarial engine picks it up in the overnight batch. No lineage from policy to model point.",
    "text": "Model points exported in the exact layout the engine reads today — downstream unchanged. Plus a read-only Excel extract for the eyeball check.",
    "code": ("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
-   "live": ("The exported file", "vol:export")},
+   "live": ("The exported file", "vol:export"),
+   "peek": ("Peek inside the file — read-only", "#/file/mpf")},
  ],
  "lever": {
    "text": "Break it in front of them: inject a deliberately bad feed, run the overnight job, "

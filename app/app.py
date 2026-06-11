@@ -133,6 +133,7 @@ def content():
                 "n": s["n"], "title": s["title"], "now": s["now"], "text": s["text"],
                 "code": {"label": s["code"][0], "url": resolve_link(s["code"][1])},
                 "live": {"label": s["live"][0], "url": resolve_link(s["live"][1])},
+                **({"peek": {"label": s["peek"][0], "hash": s["peek"][1]}} if "peek" in s else {}),
             } for s in f["steps"]],
             "lever": {"text": f["lever"]["text"],
                       "links": [{"label": lbl, "url": resolve_link(k)} for lbl, k in f["lever"]["links"]]},
@@ -190,6 +191,49 @@ def status():
         except Exception:
             tiles.append({"label": label, "value": "—", "detail": "status unavailable (grant pending?)"})
     return {"tiles": tiles}
+
+
+# Read-only file previews — the actual exported artifacts, first rows only.
+# Still a thin layer: display, never edit; download stays in the workspace.
+PREVIEW_FILES = {
+    "mpf": {"dir": "export/model_point_file", "title": "Model point file",
+            "note": "The exact file the existing actuarial engine ingests — produced by the export step, unchanged in layout."},
+    "validation": {"dir": "export/validation", "title": "Validation extract (Excel-ready)",
+                   "note": "The read-only policy-level extract for the actuary's eyeball check — open it in Excel from the volume."},
+}
+
+
+@app.get("/api/file/{key}")
+def file_preview(key: str, rows: int = 60):
+    import csv
+    import io
+
+    spec = PREVIEW_FILES.get(key)
+    if not spec:
+        return {"error": "unknown file"}
+    base = f"/Volumes/{CATALOG}/{SCHEMA}/lifecast_files/{spec['dir']}"
+    try:
+        entries = [e for e in w().files.list_directory_contents(base)
+                   if (e.name or "").endswith(".csv")]
+        entries.sort(key=lambda e: e.last_modified or 0, reverse=True)
+        if not entries:
+            return {"error": f"No file in {spec['dir']} yet — run the overnight job."}
+        f = entries[0]
+        raw = w().files.download(f.path).contents.read(1_000_000).decode("utf-8", "replace")
+        lines = raw.splitlines()
+        if not raw.endswith("\n") and len(lines) > 1:
+            lines = lines[:-1]  # drop a possibly-truncated last line
+        reader = list(csv.reader(io.StringIO("\n".join(lines[: rows + 1]))))
+        import datetime
+        mod = datetime.datetime.fromtimestamp((f.last_modified or 0) / 1000).strftime("%d %b %Y %H:%M")
+        return {"title": spec["title"], "note": spec["note"], "name": f.name,
+                "modified": mod, "size_kb": round((f.file_size or 0) / 1024),
+                "columns": reader[0] if reader else [],
+                "rows": reader[1:], "truncated": True,
+                "volume_url": resolve_link("vol:export" if key == "mpf" else "vol:"),
+                "keys": [{"key": k, "title": v["title"]} for k, v in PREVIEW_FILES.items()]}
+    except Exception:
+        return {"error": "Preview unavailable — does the app have READ VOLUME on lifecast_files?"}
 
 
 @app.get("/api/governance")

@@ -191,7 +191,8 @@ function flowPage(fid){
     `<div class="step"><div class="num">${esc(s.n)}</div><h3>${esc(s.title)}</h3>
        <p>${esc(s.text)}</p>
        <a class="lnk" href="${s.code.url}" target="_blank">${esc(s.code.label)} ↗</a>
-       <a class="lnk" href="${s.live.url}" target="_blank">${esc(s.live.label)} ↗</a></div>`).join('');
+       <a class="lnk" href="${s.live.url}" target="_blank">${esc(s.live.label)} ↗</a>
+       ${s.peek?`<a class="lnk" href="${s.peek.hash}">${esc(s.peek.label)} →</a>`:''}</div>`).join('');
   root.innerHTML = nav('home') + `
   <div class="crumb"><a href="#/">LifeCast</a> / ${esc(f.eyebrow)}</div>
   <div class="eyebrow">${esc(f.eyebrow)}</div>
@@ -306,10 +307,46 @@ async function governancePage(){
   the same tables an auditor would query directly.</div>`;
 }
 
+async function filePage(key){
+  root.innerHTML = nav('home') + `<div class="crumb"><a href="#/">LifeCast</a> /
+    <a href="#/flow/model-point-feed">Model point generator</a> / file</div>
+    <p class="sub" style="margin-top:14px">Reading the file…</p>`;
+  let d; try{ d = await (await fetch('api/file/'+encodeURIComponent(key))).json(); }
+  catch(e){ d={error:'Could not load the preview.'}; }
+  if(location.hash !== '#/file/'+key) return;
+  if(d.error){
+    root.innerHTML = nav('home') + `<div class="crumb"><a href="#/">LifeCast</a> / file</div>
+      <p class="sub" style="margin-top:14px">${esc(d.error)}</p>`;
+    return;
+  }
+  const switcher = d.keys.map(k=>
+    `<a class="plink" style="${k.key===key?'border-color:var(--v);color:var(--v)':''}" href="#/file/${k.key}">${esc(k.title)}</a>`).join('');
+  const table = `<div style="overflow-x:auto;margin-top:12px"><table class="gtable">
+    <tr>${d.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>
+    ${d.rows.map(r=>`<tr>${r.map(v=>`<td style="font-variant-numeric:tabular-nums">${esc(v)}</td>`).join('')}</tr>`).join('')}
+    </table></div>`;
+  root.innerHTML = nav('home') + `
+  <div class="crumb"><a href="#/">LifeCast</a> / <a href="#/flow/model-point-feed">Model point generator</a> / file</div>
+  <div class="eyebrow">Read-only preview · step 4</div>
+  <h1 class="flow-h2">${esc(d.title)}</h1>
+  <p class="story">${esc(d.note)}</p>
+  <div class="chips" style="margin-top:10px">
+    <span class="chip"><b>${esc(d.name)}</b></span>
+    <span class="chip">written ${esc(d.modified)}</span>
+    <span class="chip">${esc(String(d.size_kb))} KB</span>
+    <span class="chip">showing first ${d.rows.length} rows</span></div>
+  <div class="plinks" style="margin-top:12px">${switcher}
+    <a class="plink" href="${d.volume_url}" target="_blank">Open on the volume (download / Excel) ↗</a></div>
+  ${table}
+  <div class="foot">Display only — the cockpit never edits an artifact. The file itself lives on the
+  governed volume; lineage links it back to every policy row that produced it.</div>`;
+}
+
 function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
+  if(parts[0]==='file' && parts[1]) return filePage(parts[1]);
   if(parts[0]==='governance') return governancePage();
   if(parts[0]==='flow' && parts[1]) return flowPage(parts[1]);
   if(parts[0]==='p' && parts[2]) return cardPage(parts[1], parts[2]);
