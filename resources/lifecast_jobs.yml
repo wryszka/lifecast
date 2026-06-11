@@ -14,22 +14,31 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: policy_book
+          environment_key: default
           notebook_task:
             notebook_path: ../00_foundation/00_synthetic_policy_book.py
         - task_key: prophet_extract
           depends_on:
             - task_key: policy_book
+          environment_key: default
           notebook_task:
             notebook_path: ../00_foundation/01_prophet_extract_mock.py
         - task_key: assumption_master
+          environment_key: default
           notebook_task:
             notebook_path: ../02_assumption_governance/00_assumption_master.py
         - task_key: prophet_results
+          environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/00_prophet_results_mock.py
         - task_key: external_scenarios
+          environment_key: default
           notebook_task:
             notebook_path: ../04_scenario_management/00_external_scenarios_mock.py
 
@@ -44,6 +53,10 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: refresh_model_points
           pipeline_task:
@@ -51,11 +64,13 @@ resources:
         - task_key: quality_gate
           depends_on:
             - task_key: refresh_model_points
+          environment_key: default
           notebook_task:
             notebook_path: ../01_model_point_pipeline/01_quality_gate.py
         - task_key: export_model_point_file
           depends_on:
             - task_key: quality_gate
+          environment_key: default
           notebook_task:
             notebook_path: ../01_model_point_pipeline/02_export_model_point_file.py
 
@@ -74,8 +89,13 @@ resources:
           default: "Best Estimate — smoker loading review"
         - name: smoker_loading_pct
           default: "10"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: assumption_entry
+          environment_key: default
           notebook_task:
             notebook_path: ../02_assumption_governance/01_excel_entry_roundtrip.py
 
@@ -95,8 +115,13 @@ resources:
           default: approve
         - name: note
           default: "Reviewed against experience analysis."
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: assumption_approval
+          environment_key: default
           notebook_task:
             notebook_path: ../02_assumption_governance/02_assumption_approval.py
 
@@ -111,6 +136,10 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: refresh_results
           pipeline_task:
@@ -118,16 +147,19 @@ resources:
         - task_key: cfo_export
           depends_on:
             - task_key: refresh_results
+          environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/02_cfo_export.py
         - task_key: publish_dashboard
           depends_on:
             - task_key: refresh_results
+          environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/03_create_dashboard.py
         - task_key: genie_space
           depends_on:
             - task_key: refresh_results
+          environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/04_create_genie_space.py
 
@@ -141,8 +173,13 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: scenario_ingest
+          environment_key: default
           notebook_task:
             notebook_path: ../04_scenario_management/01_scenario_ingest.py
 
@@ -164,13 +201,24 @@ resources:
           default: "0.009"
         - name: equity_vol
           default: "0.18"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+        # ML work runs on the LifeCast ML environment (v5 + QuantLib/MLflow);
+        # Databricks-provided AI base env IDs aren't supported on this workspace yet.
+        - environment_key: ml
+          spec:
+            base_environment: /Workspace/Shared/lifecast/environments/lifecast_ml.yml
       tasks:
         - task_key: rfr_curve
+          environment_key: default
           notebook_task:
             notebook_path: ../04_scenario_management/02_eiopa_rfr.py
         - task_key: quantlib_generator
           depends_on:
             - task_key: rfr_curve
+          environment_key: ml
           notebook_task:
             notebook_path: ../04_scenario_management/03_quantlib_hull_white.py
 
@@ -186,7 +234,12 @@ resources:
           default: ${var.catalog}
         - name: action
           default: inject
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
       tasks:
         - task_key: bad_feed_day
+          environment_key: default
           notebook_task:
             notebook_path: ../01_model_point_pipeline/03_bad_feed_day.py

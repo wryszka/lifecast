@@ -30,7 +30,9 @@ One token, `lifecast`, on every named object. This is how LifeCast stays disting
 - No hardcoded workspace URLs or absolute IDs. Everything derives from the bundle target + `catalog`.
 - Notebook `catalog` widgets default to the dev catalog so interactive runs work out of the box (jobs always pass `${var.catalog}`). When porting, update the widget default across notebooks in one sed pass.
 - Serverless throughout. Reinstall: `databricks bundle deploy -t <target>`.
-- Serverless base env is slim: any non-base library a notebook needs (openpyxl, QuantLib, mlflow) gets an explicit `%pip install` cell — never rely on the ambient environment version.
+- **Serverless environment policy:** every job pins `environment_version: "5"` via a job-level `environments` block + `environment_key` on each notebook task. ML tasks use `environment_key: ml` → `environments/lifecast_ml.yml` (v5 + QuantLib/mlflow/openpyxl; swap for the Databricks AI base-env ID once those are enabled — this workspace currently accepts only custom yaml paths). Interactively, select that same yaml as the notebook's base environment.
+- Serverless base env is slim: any non-base library a notebook needs (openpyxl, QuantLib, mlflow) still gets an explicit `%pip install` cell, so notebooks survive interactive sessions on unpinned environments.
+- Requires Databricks CLI ≥ v1.x — older CLIs silently drop job `environments` on deploy.
 
 ## The app — hard rule
 

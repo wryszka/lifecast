@@ -1,0 +1,11 @@
+# LifeCast ML environment — used by ML tasks (QuantLib/MLflow today, Phase 5
+# projection + model training next). Also selectable interactively: notebook
+# Environment panel -> base environment -> this file.
+# Databricks-provided AI base environments aren't enabled on this workspace yet
+# (only custom yaml paths are supported); swap this for the AI base env ID when
+# they GA.
+environment_version: '5'
+dependencies:
+  - QuantLib
+  - mlflow-skinny
+  - openpyxl
