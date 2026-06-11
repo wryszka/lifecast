@@ -20,7 +20,8 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 2 | Assumption governance | ✅ Built |
 | 3 | Results + AI/BI + Genie | ✅ Built |
 | 4 | ESG / scenario management | ✅ Built |
-| 5–6 | Demand-driven | Not started |
+| 5 | Projection migration POC | ✅ Built |
+| 6 | Stochastic + boundaries | Not started |
 
 ## Install — one edit
 
@@ -59,6 +60,9 @@ story with its own README and numbered assets in run order:
   04_scenario_management/    use case 4 — scenarios governed: consume the vendor's, illustrate with QuantLib
     00_external_scenarios_mock · 01_scenario_ingest · 02_eiopa_rfr
     03_quantlib_hull_white · sample_data/ (EIOPA-format workbook)
+  05_projection_migration/   use case 5 — the workshop: same product in Python, tied out side by side
+    00_prophet_baseline_mock · 01_term_projection (the workshop notebook)
+    02_projection_validation
   .bundle/                   bundle internals — ignore
 ```
 
@@ -82,6 +86,7 @@ prefixes), all files in the `lifecast_files` volume.
 | `LifeCast — BEL Movement` dashboard · `LifeCast — Results` Genie space | The reporting destinations: counters/trend/movement live from the governed layer; Genie answers "BEL movement vs last quarter by product line" |
 | Job `lifecast_scenario_ingest` | Phase 4 consume: vendor scenario delivery → validation gate → `esg_scenarios` + versioned `esg_scenario_sets` registry → ACTIVE. Feed point: `esg_active_set_id()` / `esg_scenarios_active()` |
 | Job `lifecast_esg_illustrative` | Phase 4 illustrate: EIOPA RFR ingest (`esg_rfr_curve`, reused from the Excel accelerator) → QuantLib HW1F + Black-Scholes → `esg_hull_white_paths`, AVAILABLE; calibration + martingale diagnostics in MLflow (`/Shared/lifecast/04_scenario_management/esg_calibration`) |
+| Job `lifecast_projection_run` | Phase 5 (the expand): legacy baseline per model point → Python projection on governed inputs (`gld_term_projection`, MLflow-tracked, UC model `lifecast_term_projection` @champion) → per-MP tie-out gate (`gld_projection_validation`, £0.01 tolerance, drift fails the run) |
 
 ## The demo beat
 
@@ -95,7 +100,11 @@ prefixes), all files in the `lifecast_files` volume.
    *"Which product line drove the BEL increase in the latest quarter?"* — GROUP_PROTECTION,
    +£8.8m, straight off the governed layer. CFO export lands in `export/board_pack/`.
    *Track 1 complete — zero actuarial maths written.*
-5. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
+5. **Projection migration:** run `lifecast_projection_run` — the same term product in
+   Python, on the governed basis and curve, **ties out to the penny per model point**
+   (1,623/1,623) in ~0.2 seconds against a multi-hour anchor. Registered in UC, every
+   run on the record. *The workshop beat: the client writes the product logic.*
+6. **Assumption governance:** open the Excel template (or run `lifecast_assumption_entry`) —
    a +10% smoker loading becomes a draft basis, PENDING_APPROVAL. Run
    `lifecast_assumption_approval` → new basis live, old one SUPERSEDED, every step in
    `asm_approval_log`. The next overnight run records the new `assumption_set_id`.

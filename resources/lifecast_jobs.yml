@@ -222,6 +222,41 @@ resources:
           notebook_task:
             notebook_path: ../04_scenario_management/03_quantlib_hull_white.py
 
+    # Phase 5 — the projection migration POC (workshop scaffold): legacy
+    # baseline -> Python projection (MLflow + UC model) -> per-MP tie-out gate.
+    lifecast_projection_run:
+      name: lifecast_projection_run
+      description: "Phase 5: projection migration POC — legacy engine baseline, Python term projection on governed inputs (MLflow-tracked, UC-registered), per-model-point side-by-side validation with a tolerance gate."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+        - environment_key: ml
+          spec:
+            base_environment: /Workspace/Shared/lifecast/environments/lifecast_ml.yml
+      tasks:
+        - task_key: legacy_baseline
+          environment_key: default
+          notebook_task:
+            notebook_path: ../05_projection_migration/00_prophet_baseline_mock.py
+        - task_key: term_projection
+          depends_on:
+            - task_key: legacy_baseline
+          environment_key: ml
+          notebook_task:
+            notebook_path: ../05_projection_migration/01_term_projection.py
+        - task_key: validation
+          depends_on:
+            - task_key: term_projection
+          environment_key: ml
+          notebook_task:
+            notebook_path: ../05_projection_migration/02_projection_validation.py
+
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
     lifecast_bad_feed_day:
