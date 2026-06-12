@@ -121,6 +121,47 @@ FLOWS = [
 },
 ]
 
+# ── POC plan (brief §12.3, narrowed to one term product). Canonical copy also
+# ships as POC_TERM_PRODUCT.md in the repo. ──────────────────────────────────
+POC_PLAN = {
+ "title": "POC — one product, fully off the engine",
+ "lead": "One deterministic term product, valued end to end on the platform in 4–6 weeks — with the engine reduced, for that product, to a comparison reference. The engine itself is untouched and keeps running everything else.",
+ "objective": "At exit, the term product values end to end here — feed → model points → approved basis → projection → results → audit — and the evidence pack is strong enough that your validation function can defend switching this product's engine run off.",
+ "scope_out": "Out of scope (mapped, not built): complex products and guarantees · capital model integration · IFRS 17 engine feeds · any licence decision. Hybrid is a perfectly good end state.",
+ "reuse": [
+  ("Ingestion + quality gate + quarantine", "Your policy extract (spec + 2 historical valuation dates)"),
+  ("Model point grouping with control-total proof", "Your grouping bands and quality rules"),
+  ("Assumption registry, Excel round-trip, approvals", "Your assumption workbooks"),
+  ("Projection scaffold + MLflow + UC model registry", "Your product logic — written by your actuaries (the workshop)"),
+  ("Per-MP validation harness with tolerance gate", "Your engine's output files as the baseline"),
+  ("Results layer, dashboards, Genie, run overseer", "Your reporting cuts"),
+ ],
+ "weeks": [
+  ("Week 1 — your data lands", "Extract connected, landed, gated; your quality rules in the gate; control totals reconcile extract → model points against your current file exactly."),
+  ("Week 2 — your basis, your logic", "Assumption workbooks imported through the Excel round-trip; basis approved on the record. Workshop: your actuaries delete our illustrative product logic and write yours in the scaffold."),
+  ("Week 3 — first side-by-side", "Python projection vs a real engine run on identical model points, basis and curve. Iterate until the per-model-point tie-out passes tolerance — the gate fails loudly until it does."),
+  ("Week 4 — the second date", "Repeat on the second valuation date. Analysis of change: the movement between dates ties out, not just the levels. Schedule, alerting, access controls, the bad-feed drill run deliberately."),
+  ("Weeks 5–6 — evidence and exit", "Documentation pack assembled from the record (it already exists); independent reviewer walkthrough; downstream consumers of this product's BEL mapped; exit review."),
+ ],
+ "exit": [
+  ("Per-model-point tie-out vs engine", "100% of MPs within agreed tolerance (default £0.01) on ≥ 2 valuation dates"),
+  ("Analysis of change", "movement between the two dates within agreed tolerance"),
+  ("Control totals", "policy count + sum assured reconcile exactly, end to end"),
+  ("Run time", "full valuation of the product in minutes, demonstrated live"),
+  ("Reproducibility", "any past run re-executed from its recorded basis + curve + code version — same numbers"),
+  ("Operability", "scheduled run with gate + alerting; a deliberately bad feed stopped before the file (the RED drill)"),
+  ("Ownership", "product logic written and documented by your actuaries; independent validation walkthrough completed"),
+ ],
+ "decision": "Move this product's engine run to 'comparison only', then off — for this product. Nothing else changes: the engine, every other product and all downstream consumers continue exactly as today. The next product starts from a proven scaffold and a faster week 1.",
+ "needs": [
+  "Extract spec + two historical valuation-date extracts",
+  "The assumption workbooks for the product",
+  "Two matching engine output files (same dates) as the baseline",
+  "2–3 actuaries for the workshop — the logic is theirs",
+  "A named contact in validation, involved from week 1",
+ ],
+}
+
 # ── Terms: eight client-safe one-liners — the anchor for the planned
 # learn-this-first link. ─────────────────────────────────────────────────────
 TERMS = [

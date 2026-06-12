@@ -265,6 +265,7 @@ function shell(active, html){
       ${flowItem(5,'stoch','Stochastic')}
       <div class="sec">Reference</div>
       <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
+      <a href="#/poc" class="${active==='poc'?'on':''}">POC plan</a>
       <a href="#/personas" class="${active==='personas'?'on':''}">Personas</a>
       <a href="#/terms" class="${active==='terms'?'on':''}">Terms</a>
     </nav>
@@ -391,6 +392,7 @@ function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
+  if(parts[0]==='poc') return pocPage();
   if(parts[0]==='personas') return personasPage();
   if(parts[0]==='terms') return termsPage();
   if(parts[0]==='file' && parts[1]) return filePage(parts[1]);

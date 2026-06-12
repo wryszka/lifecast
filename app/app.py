@@ -13,7 +13,7 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import CARDS, FLOWS, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, TERMS, TILES
+from content import CARDS, FLOWS, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, POC_PLAN, TERMS, TILES
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -170,6 +170,7 @@ def content():
               **({"url": resolve_link(t["link"])} if "link" in t else {})} for t in TILES]
     return {"tiles": tiles, "flows": flows, "personas": personas,
             "terms": [{"term": t, "text": x} for t, x in TERMS],
+            "poc": POC_PLAN,
             "host": HOST, "catalog": CATALOG}
 
 

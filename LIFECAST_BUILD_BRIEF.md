@@ -272,9 +272,8 @@ Phases 0–3. What the client runs to see what they'll get.
 Primarily for Track 2 (Phase 5). We bring the scaffold; the client writes the product logic.
 - Agenda · pre-reqs / environment setup · hands-on exercises · partner involvement model — *to be written*
 
-### 12.3 POC doc & run instructions — `[PLACEHOLDER — TBD]`
-Ships with the synthetic POC.
-- Deployment (the one-edit install) · what to swap for client data · validation-against-Prophet checklist · 4–6 week success criteria — *to be written*
+### 12.3 POC doc & run instructions — ✅ drafted (narrowed to one product)
+`POC_TERM_PRODUCT.md` in the repo, and live as the **POC plan** page in the Cockpit sidebar: one deterministic term product fully off the engine in 4–6 weeks — reused-vs-swapped, week-by-week plan, seven measurable exit criteria (tie-out on ≥2 valuation dates, analysis of change, control totals, reproducibility, the RED drill, ownership), the evidence pack as a by-product of running, and the exit decision phrased per product. Deployment/run instructions remain in README.md.
 
 ### 12.4 Discovery questions — *starter set; expand per engagement*
 Run before scoping. Tag every answer: **Mandatory** (in the POC) / **Good-to-have** (Phase 2+) / **Unimportant** (don't build).
