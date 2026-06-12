@@ -401,4 +401,8 @@ def governance():
 
 @app.get("/")
 def index():
-    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "index.html"))
+    # no-cache: the UI iterates fast — browsers must revalidate, not reuse.
+    return FileResponse(
+        os.path.join(os.path.dirname(__file__), "static", "index.html"),
+        headers={"Cache-Control": "no-cache"},
+    )
