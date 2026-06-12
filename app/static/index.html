@@ -12,6 +12,51 @@
       --v:#2563eb;--v7:#1d4ed8;--v50:#eff6ff;--v100:#dbeafe;
       --green:#067647;--green-bg:#ecfdf3;--amber:#b54708;--amber-bg:#fffaeb}
 *{box-sizing:border-box;margin:0;padding:0}
+.layout{display:flex;min-height:100vh}
+.side{width:248px;background:#0b1220;color:#fff;display:flex;flex-direction:column;flex-shrink:0;
+      position:sticky;top:0;height:100vh}
+.brand{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:11px;align-items:center}
+.brand .dot{width:30px;height:30px;border-radius:9px;background:var(--v);display:flex;align-items:center;
+            justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.brand b{font-size:14.5px;display:block;line-height:1.2}
+.brand span{font-size:10.5px;color:#aeb6c6;letter-spacing:.08em;text-transform:uppercase}
+.nav{flex:1;padding:12px 10px;overflow:auto}
+.nav .sec{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#5b6477;
+          padding:14px 12px 5px}
+.nav a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;color:#aeb6c6;
+       text-decoration:none;font-size:13.5px;cursor:pointer;font-weight:500}
+.nav a.on{background:rgba(37,99,235,.22);color:#fff;font-weight:600;box-shadow:inset 0 0 0 1px rgba(37,99,235,.4)}
+.nav a:hover{color:#fff}
+.nav a .ext{margin-left:auto;font-size:10px;color:#5b6477}
+.sidefoot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-size:10.5px;color:#5b6477;line-height:1.5}
+.main{flex:1;min-width:0;background:var(--bg)}
+/* process map */
+.pmap{display:grid;grid-template-columns:1fr 36px 1.05fr 36px 1fr;gap:14px;margin-top:26px;align-items:stretch}
+.pcol{display:flex;flex-direction:column;gap:12px}
+.collbl{font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.pblock{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;
+        display:block;color:var(--ink);transition:border-color .12s, box-shadow .12s;flex:1}
+a.pblock:hover{border-color:var(--v);box-shadow:0 2px 10px rgba(37,99,235,.08)}
+.pblock h3{font-size:14.5px;font-weight:700;margin-bottom:4px}
+.pblock p{font-size:12px;color:var(--muted)}
+.pblock .go{margin-top:8px;font-size:11.5px;font-weight:700;color:var(--v)}
+.pblock.primary{border-color:var(--v);box-shadow:inset 0 0 0 1px var(--v)}
+.pmaparr{display:flex;align-items:center;justify-content:center;color:var(--v);font-size:22px;font-weight:800}
+.engineblk{background:var(--bg);border:2px dashed var(--line);border-radius:14px;padding:22px 18px;
+           display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1}
+.engineblk h3{font-size:16px;font-weight:800}
+.engineblk p{font-size:12px;color:var(--muted);margin-top:6px;max-width:240px}
+.engineblk .tag{font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+                margin-bottom:8px}
+.beside{margin-top:12px}
+.beside .collbl{margin-bottom:8px}
+.beside a{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;
+          padding:10px 13px;font-size:12px;color:var(--ink);margin-top:8px}
+.beside a:hover{border-color:var(--v)}
+.beside a b{display:block;font-size:12.5px}
+.beside a span{color:var(--muted);font-size:11.5px}
+@media(max-width:960px){.pmap{grid-template-columns:1fr}.pmaparr{transform:rotate(90deg);min-height:34px}
+  .side{display:none}}
 body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
      font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
 a{color:var(--v);text-decoration:none}
@@ -191,18 +236,42 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 </style>
 </head>
 <body>
-<div class="wrap" id="root">Loading…</div>
+<div id="root" style="padding:40px;font-family:Inter,sans-serif">Loading…</div>
 <script>
 let DATA=null, STATUS=null, GOV=null;
 const root=document.getElementById('root');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-function nav(active){
-  return `<div class="topnav">
-    <a href="#/" class="${active==='home'?'on':''}">Use cases</a>
-    <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
-    <a href="#/terms">Terms</a>
-  </div>`;
+function shell(active, html){
+  const t = DATA ? DATA.tiles : [];
+  const flowItem = (idx, key, label) => {
+    const tile = t[idx]; if(!tile) return '';
+    if(tile.flow) return `<a href="#/flow/${tile.flow}" class="${active===key?'on':''}">${label}</a>`;
+    return `<a href="${tile.url}" target="_blank">${label}<span class="ext">↗</span></a>`;
+  };
+  root.innerHTML = `<div class="layout">
+  <aside class="side">
+    <div class="brand"><div class="dot">L</div>
+      <div><b>LifeCast</b><span>Bricksurance Life</span></div></div>
+    <nav class="nav">
+      <div class="sec">The process</div>
+      <a href="#/" class="${active==='map'?'on':''}">Process map</a>
+      <div class="sec">Flows</div>
+      ${flowItem(0,'mp','Model points')}
+      ${flowItem(1,'asm','Assumptions')}
+      ${flowItem(2,'res','Results & analytics')}
+      ${flowItem(3,'esg','Scenarios')}
+      ${flowItem(4,'proj','Projection')}
+      ${flowItem(5,'stoch','Stochastic')}
+      <div class="sec">Reference</div>
+      <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
+      <a href="#/personas" class="${active==='personas'?'on':''}">Personas</a>
+      <a href="#/terms" class="${active==='terms'?'on':''}">Terms</a>
+    </nav>
+    <div class="sidefoot">About this demo — Bricksurance Life is fictional; every figure is
+    synthetic and illustrative. No client data, no actuarial methodology.</div>
+  </aside>
+  <div class="main"><div class="wrap">${html}</div></div></div>`;
 }
 
 function header(crumbs){
@@ -217,253 +286,61 @@ function header(crumbs){
 }
 
 function landing(){
-  const tiles = DATA.tiles.map(t=>{
-    const href = t.flow ? `#/flow/${t.flow}` : t.url;
-    const ext = t.flow ? '' : ' target="_blank"';
-    const go = t.flow ? 'Open the story →' : 'Assets in the workspace ↗';
-    return `<a class="uctile${t.flow?'':' ext'}" href="${href}"${ext}>
-      <div class="tnum">${esc(t.n)}</div><h2>${esc(t.title)}</h2><p>${esc(t.text)}</p>
-      <div class="go">${go}</div></a>`;
-  }).join('');
-  const chips = STATUS && STATUS.tiles.length ? `<div class="chips">`+STATUS.tiles.map(t=>
-    `<span class="chip ${esc(t.value)}">${esc(t.label)}: <b>${esc(t.value)}</b></span>`).join('')+`</div>` : '';
-  const plinks = DATA.personas.map(p=>
-    `<a class="plink" href="#/p/${p.id}">${esc(p.title)} · ${p.cards.length} questions</a>`).join('');
-  root.innerHTML = nav('home') + `
+  const t = DATA.tiles;
+  const block = (tile, title, text, primary) => tile.flow
+    ? `<a class="pblock${primary?' primary':''}" href="#/flow/${tile.flow}"><h3>${esc(title)}</h3>
+       <p>${esc(text)}</p><div class="go">Open the demo →</div></a>`
+    : `<a class="pblock" href="${tile.url}" target="_blank"><h3>${esc(title)}</h3>
+       <p>${esc(text)}</p><div class="go">Open the assets ↗</div></a>`;
+  const chips = STATUS && STATUS.tiles.length ? `<div class="chips">`+STATUS.tiles.map(x=>
+    `<span class="chip ${esc(x.value)}">${esc(x.label)}: <b>${esc(x.value)}</b></span>`).join('')+`</div>` : '';
+  shell('map', `
   <div class="eyebrow">Bricksurance Life · presenter's cockpit</div>
-  <h1>LifeCast</h1>
-  <p class="sub">Actuarial liability modelling, rebuilt around the existing actuarial engine — one
-  use case at a time, simplest first. Start with tile 01.</p>
-  <div class="disclaimer">About this demo — Bricksurance Life is fictional; every figure is synthetic
-  and illustrative. No client data, no pricing logic, no actuarial methodology.</div>
-  <div class="tilegrid">${tiles}</div>
-  ${chips}
-  <div class="personarow"><span class="eyebrow">Presenting to someone specific?</span>
-    <div class="plinks">${plinks}</div></div>
-  <div class="foot">Status pulled read-only from <b>${esc(DATA.catalog)}.lifecast</b>. This cockpit never
-  simulates a business process — every link opens the real Databricks asset.</div>`;
-}
+  <h1>Actuarial liability modelling, end to end</h1>
+  <p class="sub">The whole process, left to right: everything that feeds the actuarial engine,
+  the engine itself — downstream of us and unchanged — and everything that comes out of it.
+  Click a block to open that part of the demo.</p>
 
-function flowPage(fid, tab){
-  const f = DATA.flows.find(x=>x.id===fid); if(!f) return landing();
-  tab = tab || 'process';
-  loadGov().then(g=>{
-    const r=(g.runs||[])[0]; if(!r) return;
-    const el=document.getElementById('flowchips'); if(!el) return;
-    el.innerHTML = [
-      `Valuation date: <b>${esc(r.valuation_date||'—')}</b>`,
-      `Last run: <b style="color:${r.verdict==='GREEN'?'var(--green)':'#b42318'}">${esc(r.verdict)}</b>`,
-      r.policies_in_scope?`<b>${Number(r.policies_in_scope).toLocaleString()}</b> policies → <b>${Number(r.model_points).toLocaleString()}</b> model points`:null,
-      r.movement_check && r.movement_check!=='—' ? `movement: <b>${esc(r.movement_check)}</b>` : null,
-    ].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');
-  });
-
-  const tabs = [['process',"What we're showing"],['oldnew','Old → new'],['manage','Management']];
-  const subnav = `<div class="subtabs">${tabs.map(([k,l])=>
-    `<a class="subtab ${tab===k?'on':''}" href="#/flow/${f.id}/${k}">${esc(l)}</a>`).join('')}</div>`;
-
-  let body='';
-  if(tab==='process'){
-    body = `<p class="lead">${esc(f.tab1.lead)}</p>
-    <div class="usefor">${esc(f.use_for)}</div>
-    <div class="mapgrid" style="margin-top:18px">${f.skeleton.map((st,i)=>
-      `<div class="step"><div class="num">${i+1}</div><h3>${esc(st.title)}</h3>
-         <p>${esc(st.plain)}</p></div>`).join('')}</div>
-    <div class="maparrows" style="margin-top:6px">${f.skeleton.map((_,i)=>
-      `<div>${i<f.skeleton.length-1?'':''}</div>`).join('')}</div>`;
-  }
-  if(tab==='oldnew'){
-    body = `<p class="lead">${esc(f.tab2.lead)}</p>` +
-    f.tab2.swaps.map((sw,i)=>`<div class="swaprow">
-      <div class="sn">${i+1}</div>
-      <div class="swapold"><span class="sl">${esc(f.skeleton[i].title)} · old</span>${esc(sw.old)}</div>
-      <div class="arr">→</div>
-      <div class="swapnew"><span class="sl">${esc(f.skeleton[i].title)} · new</span>${esc(sw.new)}<div>
-        ${sw.links.map(x=>`<a class="lnk" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}
-        ${sw.peek?`<a class="lnk" href="${sw.peek.hash}">${esc(sw.peek.label)} →</a>`:''}</div></div>
-    </div>`).join('') +
-    `<div class="handoff">
-      <div class="ours"><span class="sl">Our scope ends here</span>${esc(f.tab2.handoff.ours)}</div>
-      <div class="boundary"><span>scope boundary</span></div>
-      <div class="theirs"><span class="sl">Downstream — unchanged</span>${esc(f.tab2.handoff.theirs)}</div>
+  <div class="pmap">
+    <div class="pcol"><div class="collbl">Inputs — what feeds the engine</div>
+      ${block(t[0], 'Policy data → model point file', 'Raw policy records grouped into the summarised file the engine reads — gated, reconciled, lineage end to end.', true)}
+      ${block(t[1], 'Assumptions — the basis', 'Mortality, lapse and expense tables: versioned, approved, audit-trailed. Excel entry kept.')}
+      ${block(t[3], 'Economic scenarios', 'Your scenario provider\'s sets, versioned and gated — plus an illustrative generated set.')}
     </div>
-    <div class="handoffnote">${esc(f.tab2.handoff.text)}</div>
-    <a class="nextlink" href="${f.tab2.handoff.next_url}" target="_blank">${esc(f.tab2.handoff.next_label)} →</a>
-    <div class="scopenote">${esc(f.tab2.scope)}</div>`;
-  }
-  if(tab==='manage'){
-    body = `<p class="lead">${esc(f.tab3.lead)}</p>
-    <div class="mgrid">
-      <div class="mcard"><h3>Run control</h3><div id="runctl">Loading…</div>
-        <div class="mbtns">
-          <button class="btn2" onclick="triggerRun('run',this)">Run now</button>
-          <button class="btn2" onclick="triggerRun('inject',this)">Inject bad feed</button>
-          <button class="btn2" onclick="triggerRun('restore',this)">Restore</button></div>
-        <div class="mline" id="trigmsg" style="color:var(--muted)"></div>
-        <div class="mline" style="color:var(--muted);font-size:12px">${esc(f.tab3.run_help)}</div></div>
-      <div class="mcard"><h3>Issues</h3><div id="issues">Loading…</div></div>
-      <div class="mcard"><h3>The overseer</h3>
-        <div class="mline" style="color:var(--muted)">${esc(f.tab3.agent.intro)}
-          <a href="${f.tab3.agent.genie_url}" target="_blank">Open ${esc(f.tab3.agent.genie_title)} ↗</a></div>
-        <div class="askbox"><textarea id="askq" placeholder="Ask about the latest run…"></textarea>
-          <div class="mbtns"><button class="btn2" onclick="askOverseer()">Ask</button></div>
-          ${f.tab3.agent.questions.map(q=>`<span class="askq" onclick="document.getElementById('askq').value=this.textContent;askOverseer()">${esc(q)}</span>`).join('')}
-          <div id="askans"></div></div></div>
+    <div class="pmaparr">→</div>
+    <div class="pcol"><div class="collbl">The engine</div>
+      <div class="engineblk"><span class="tag">Downstream — unchanged</span>
+        <h3>Actuarial engine</h3>
+        <p>Your licensed modelling engine. It reads the same files it reads today.
+        Nothing we build moves it — that's the no-risk transition.</p></div>
+      <div class="beside"><div class="collbl">Alongside the engine</div>
+        <a href="${t[4].url}" target="_blank"><b>Same product in Python ↗</b>
+          <span>Tied out side by side, per model point, in seconds.</span></a>
+        <a href="${t[5].url}" target="_blank"><b>Stochastic fan-out ↗</b>
+          <span>The book valued across 1,000 simulated futures in parallel.</span></a></div>
     </div>
-    <details class="beat"><summary>Run this beat — the 10-minute click path</summary>
-      <div class="b-steps">${f.beat.map((b,i)=>
-        `<div class="b-step"><div class="bn">${i+1}</div><div>
-           <div class="bdo">${esc(b.do)}</div>
-           <div class="bex">Expect: ${esc(b.expect)}</div>
-           <div class="bsay">${esc(b.say)}</div></div></div>`).join('')}</div></details>`;
-    setTimeout(loadRunControl, 0);
-  }
-
-  root.innerHTML = nav('home') + `
-  <div class="crumb"><a href="#/">LifeCast</a> / ${esc(f.eyebrow)}</div>
-  <div class="eyebrow">${esc(f.eyebrow)}</div>
-  <h1 class="flow-h2">${esc(f.title)}</h1>
-  <div class="chips" id="flowchips" style="margin-top:10px"></div>
-  ${subnav}
-  ${body}
-  <div class="foot">Every link opens the real Databricks asset — the cockpit annotates, it never simulates.
-  New to the terminology? <a href="#/terms">Eight terms, one line each</a>.</div>`;
+    <div class="pmaparr">→</div>
+    <div class="pcol"><div class="collbl">Outputs & analytics</div>
+      ${block(t[2], 'Results & analytics', 'Engine output lands in Delta once; the BEL dashboard and Genie answer in English. The export is always offered.')}
+      <a class="pblock" href="#/governance"><h3>Governance & audit</h3>
+        <p>Every run, every basis, every sign-off — on the record. The regulator's question is a query.</p>
+        <div class="go">Open the record →</div></a>
+    </div>
+  </div>
+  ${chips}`);
 }
 
-async function loadRunControl(){
-  let d; try{ d = await (await fetch('api/runcontrol')).json(); }catch(e){ d={}; }
-  const rc=document.getElementById('runctl');
-  if(rc){
-    if(d.job){
-      const l=d.job.last;
-      rc.innerHTML = `<div class="mline">Job: <a href="${d.job.url}" target="_blank">${esc(d.job.name)} ↗</a></div>
-        <div class="mline">${esc(d.job.schedule)}</div>` +
-        (l?`<div class="mline">Last run: <b class="${esc(l.state)}">${esc(l.state)}</b> · ${esc(l.when)} ·
-            <a href="${l.url}" target="_blank">open ↗</a></div>`:'');
-    } else rc.innerHTML = '<div class="mline" style="color:var(--muted)">Run status unavailable.</div>';
-  }
-  const is=document.getElementById('issues');
-  if(is){
-    if(d.gate){
-      let rules={}; try{ rules=JSON.parse(d.gate.rules||'{}'); }catch(e){}
-      const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
-      const max=Math.max(...entries.map(e=>e[1]),1);
-      is.innerHTML = `<div class="mline">Latest gate: <b class="${esc(d.gate.verdict)}">${esc(d.gate.verdict)}</b> · ${esc(d.gate.when)}</div>
-        <div class="mline">In quarantine: <b>${Number(d.gate.quarantined).toLocaleString()}</b> rows ·
-          movement ${esc(d.gate.movement||'—')} · grouping ${esc(d.gate.grouping||'—')}</div>` +
-        (entries.length?entries.map(([k,v])=>`<div class="rulebar"><span class="rname" style="flex-basis:150px">${esc(k)}</span>
-           <span class="bar" style="width:${Math.round(120*v/max)}px"></span>
-           <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join(''):
-          '<div class="mline" style="color:var(--muted)">Nothing in quarantine — the book is clean.</div>') +
-        `<div class="mline" style="color:var(--muted);font-size:12px">${d.gate.verdict==='RED'
-          ?'What to do: review the quarantine reasons, fix or restore the feed, rerun — the file was never touched.'
-          :'What to do: nothing. The gate signed off and the file is released.'}</div>`;
-    } else is.innerHTML = '<div class="mline" style="color:var(--muted)">No gate record yet — run the overnight job.</div>';
-  }
-}
-
-async function triggerRun(action, btn){
-  const labels={run:'the overnight run',inject:'the bad feed injection',restore:'the restore'};
-  if(!confirm(`Start ${labels[action]}?`)) return;
-  const msg=document.getElementById('trigmsg');
-  msg.textContent='Starting…';
-  try{
-    const r = await (await fetch('api/run/trigger',{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify({action})})).json();
-    msg.innerHTML = r.ok ? `Started — <a href="${r.url}" target="_blank">watch the run ↗</a>` : esc(r.error||'Failed.');
-  }catch(e){ msg.textContent='Failed to start.'; }
-}
-
-async function askOverseer(){
-  const q=document.getElementById('askq').value.trim(); if(!q) return;
-  const out=document.getElementById('askans');
-  out.innerHTML='<div class="askans">The overseer is reading the run record…</div>';
-  try{
-    const r = await (await fetch('api/ask',{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})).json();
-    if(r.error){ out.innerHTML=`<div class="askans">${esc(r.error)}</div>`; return; }
-    let html = r.texts.map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join('');
-    if(r.table){
-      html += `<div style="overflow-x:auto"><table class="gtable" style="margin-top:6px">
-        <tr>${r.table.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>
-        ${r.table.rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table></div>`;
-    }
-    if(r.sql) html += `<details style="margin-top:6px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">the SQL it ran</summary><pre>${esc(r.sql)}</pre></details>`;
-    out.innerHTML = `<div class="askans">${html||'No answer.'}</div>`;
-  }catch(e){ out.innerHTML='<div class="askans">Could not reach the overseer.</div>'; }
-}
-
-async function governancePage(){
-  if(!GOV){
-    root.innerHTML = nav('gov') + `<div class="eyebrow">Governance</div><h1 class="flow-h2">The record</h1>
-      <p class="sub" style="margin-top:10px">Loading the run record…</p>`;
-    try{ GOV = await (await fetch('api/governance')).json(); }catch(e){ GOV={runs:[],inventory:[],error:'Could not load.'}; }
-    if(location.hash.includes('governance')) governancePage();
-    return;
-  }
-  const g = GOV;
-
-  // 1 · run history
-  let runsHtml;
-  if(g.error){ runsHtml = `<p class="sub" style="margin-top:10px">${esc(g.error)}</p>`; }
-  else if(!g.runs.length){ runsHtml = `<p class="sub" style="margin-top:10px">No runs on record yet — run the overnight job.</p>`; }
-  else{
-    runsHtml = `<table class="gtable"><tr><th>Run</th><th>Verdict</th><th class="num">Landed</th>
-      <th class="num">Quarantined</th><th class="num">Policies → MPs</th><th>Movement</th><th>Grouping</th>
-      <th>Basis in force <span style="text-transform:none;font-weight:600">(approved mortality/lapse/expense set)</span></th><th>Signed off by</th></tr>` +
-      g.runs.map(r=>`<tr>
-        <td>${esc(r.run)}</td>
-        <td><span class="badge ${esc(r.verdict)}">${esc(r.verdict)}</span></td>
-        <td class="num">${Number(r.rows_bronze).toLocaleString()}</td>
-        <td class="num">${Number(r.rows_quarantined).toLocaleString()} (${esc(r.quarantine_pct)}%)</td>
-        <td class="num">${r.policies_in_scope?Number(r.policies_in_scope).toLocaleString()+' → '+Number(r.model_points).toLocaleString():'—'}</td>
-        <td>${r.movement_check && r.movement_check!=='—' ? `<span class="badge ${r.movement_check==='PASS'?'GREEN':(r.movement_check==='BREACH'?'RED':'')}">${esc(r.movement_check)}</span>${r.movement_policies_pct!=null?` <span style="color:var(--muted);font-size:11px">Δpol ${esc(r.movement_policies_pct)}% · ΔSA ${esc(r.movement_sa_pct)}%</span>`:''}` : '—'}</td>
-        <td>${r.grouping_check && r.grouping_check!=='—' ? `<span class="badge ${r.grouping_check==='PASS'?'GREEN':'RED'}">${esc(r.grouping_check)}</span>`:'—'}</td>
-        <td style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(r.assumption_set_id||'—')}</td>
-        <td>${esc(r.signed_off_by)}</td></tr>`).join('') + `</table>` +
-      `<p class="sub" style="margin-top:8px;font-size:12.5px">A RED run carries no sign-off — that's the
-      control working, not a gap. Movement reconciles policy count and sum assured against the last
-      good run; Grouping proves control totals survive the policies→model-points compression.</p>`;
-  }
-
-  // 2 · why it went RED — latest run with rejects
-  let rulesHtml = `<p class="sub" style="margin-top:10px">No rejects on the current record — inject the bad feed to see this populate.</p>`;
-  const withRejects = (g.runs||[]).find(r=>Number(r.rows_quarantined)>0 && r.rule_breakdown);
-  if(withRejects){
-    let rules={}; try{ rules=JSON.parse(withRejects.rule_breakdown); }catch(e){}
-    const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
-    const max=Math.max(...entries.map(e=>e[1]),1);
-    rulesHtml = `<p class="sub" style="margin:10px 0 4px">Run of ${esc(withRejects.run)} —
-      ${Number(withRejects.rows_quarantined).toLocaleString()} rows rejected, by rule:</p>` +
-      entries.map(([k,v])=>`<div class="rulebar"><span class="rname">${esc(k)}</span>
-        <span class="bar" style="width:${Math.round(260*v/max)}px"></span>
-        <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join('');
-  }
-
-  // 3 · what we record and why
-  const inv = `<table class="gtable"><tr><th>What's recorded</th><th>Where</th><th>Why it matters</th></tr>` +
-    g.inventory.map(i=>`<tr><td style="font-weight:600">${esc(i.what)}</td>
-      <td><a href="${i.where.url}" target="_blank" style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(i.where.label)} ↗</a></td>
-      <td style="color:var(--muted)">${esc(i.why)}</td></tr>`).join('') + `</table>`;
-
-  root.innerHTML = nav('gov') + `
-  <div class="eyebrow">Governance</div>
-  <h1 class="flow-h2">The record</h1>
-  <p class="story">Nothing on this page was written for audit — it's the by-product of running the
-  process. Three questions an auditor or a head of function asks, answered straight from the tables.</p>
-
-  <div class="section" style="margin-top:22px"><span class="eyebrow">1 · What ran, and was it clean?</span></div>
-  ${runsHtml}
-
-  <div class="section" style="margin-top:26px"><span class="eyebrow">2 · When it went RED — why, exactly?</span></div>
-  ${rulesHtml}
-
-  <div class="section" style="margin-top:26px"><span class="eyebrow">3 · What we record, and why</span></div>
-  ${inv}
-
-  <div class="scopenote">${esc(g.scope)}</div>
-  <div class="foot">Read-only, pulled live from <b>${esc(DATA?DATA.catalog:'')}.lifecast</b> —
-  the same tables an auditor would query directly.</div>`;
+function personasPage(){
+  const personas = `<div class="grid g2">`+DATA.personas.map(p=>
+    `<div class="card persona" onclick="location.hash='#/p/${p.id}'">
+       <div class="eyebrow">Persona</div><h2>${esc(p.title)}</h2><p>${esc(p.blurb)}</p>
+       <div class="go">${p.cards.length} questions →</div></div>`).join('')+`</div>`;
+  shell('personas', `
+  <div class="eyebrow">Presenting to someone specific?</div>
+  <h1>Pick the seat across the table</h1>
+  <p class="sub">Each persona has the questions that seat actually asks — and each card says what
+  it proves, where it lives, and where to click.</p>
+  ${personas}`);
 }
 
 async function loadGov(){
@@ -472,15 +349,15 @@ async function loadGov(){
 }
 
 async function filePage(key){
-  root.innerHTML = nav('home') + `<div class="crumb"><a href="#/">LifeCast</a> /
-    <a href="#/flow/model-point-feed">Model point generator</a> / file</div>
-    <p class="sub" style="margin-top:14px">Reading the file…</p>`;
+  shell('mp', `<div class="crumb"><a href="#/">Process map</a> /
+    <a href="#/flow/model-point-feed">Model points</a> / file</div>
+    <p class="sub" style="margin-top:14px">Reading the file…</p>`);
   let d; try{ d = await (await fetch('api/file/'+encodeURIComponent(key))).json(); }
   catch(e){ d={error:'Could not load the preview.'}; }
   if(location.hash !== '#/file/'+key) return;
   if(d.error){
-    root.innerHTML = nav('home') + `<div class="crumb"><a href="#/">LifeCast</a> / file</div>
-      <p class="sub" style="margin-top:14px">${esc(d.error)}</p>`;
+    shell('mp', `<div class="crumb"><a href="#/">Process map</a> / file</div>
+      <p class="sub" style="margin-top:14px">${esc(d.error)}</p>`);
     return;
   }
   const switcher = d.keys.map(k=>
@@ -489,8 +366,8 @@ async function filePage(key){
     <tr>${d.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>
     ${d.rows.map(r=>`<tr>${r.map(v=>`<td style="font-variant-numeric:tabular-nums">${esc(v)}</td>`).join('')}</tr>`).join('')}
     </table></div>`;
-  root.innerHTML = nav('home') + `
-  <div class="crumb"><a href="#/">LifeCast</a> / <a href="#/flow/model-point-feed">Model point generator</a> / file</div>
+  shell('mp', `
+  <div class="crumb"><a href="#/">Process map</a> / <a href="#/flow/model-point-feed">Model points</a> / file</div>
   <div class="eyebrow">Read-only preview · step 4</div>
   <h1 class="flow-h2">${esc(d.title)}</h1>
   <p class="story">${esc(d.note)}</p>
@@ -503,13 +380,14 @@ async function filePage(key){
     <a class="plink" href="${d.volume_url}" target="_blank">Open on the volume (download / Excel) ↗</a></div>
   ${table}
   <div class="foot">Display only — the cockpit never edits an artifact. The file itself lives on the
-  governed volume; lineage links it back to every policy row that produced it.</div>`;
+  governed volume; lineage links it back to every policy row that produced it.</div>`);
 }
 
 function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
+  if(parts[0]==='personas') return personasPage();
   if(parts[0]==='terms') return termsPage();
   if(parts[0]==='file' && parts[1]) return filePage(parts[1]);
   if(parts[0]==='governance') return governancePage();
