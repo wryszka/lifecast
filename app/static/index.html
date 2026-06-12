@@ -520,8 +520,6 @@ window.addEventListener('hashchange', route);
 (async()=>{
   DATA = await (await fetch('api/content')).json();
   route();
-  try{ STATUS = await (await fetch('api/status')).json(); }catch(e){ STATUS={tiles:[]}; }
-  if(!location.hash || location.hash==='#/' ) landing();
 })();
 </script>
 </body>

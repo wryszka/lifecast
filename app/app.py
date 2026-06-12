@@ -27,6 +27,13 @@ app = FastAPI(title="LifeCast Cockpit")
 _w = None
 
 
+@app.on_event("startup")
+def _warm():
+    # Warm the link-resolution cache off the request path — first paint stays fast.
+    import threading
+    threading.Thread(target=lambda: _resolve_ids(), daemon=True).start()
+
+
 def w() -> WorkspaceClient:
     global _w
     if _w is None:
@@ -43,7 +50,7 @@ _links_cache: dict = {"at": 0.0, "ids": {}}
 
 def _resolve_ids() -> dict:
     now = time.time()
-    if now - _links_cache["at"] < 300 and _links_cache["ids"]:
+    if now - _links_cache["at"] < 3600 and _links_cache["ids"]:
         return _links_cache["ids"]
     ids: dict = {"jobs": {}, "pipelines": {}, "dashboard": None, "genie": None,
                  "genie_runhealth": None, "experiments": {}}
