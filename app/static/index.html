@@ -310,9 +310,6 @@ function landing(maptab){
   const pills = `<div class="subtabs">
     <a class="subtab ${maptab==='now'?'on':''}" href="#/">Around the engine</a>
     <a class="subtab ${maptab==='dest'?'on':''}" href="#/destination">The destination</a></div>`;
-  const chips = STATUS && STATUS.tiles.length ? `<div class="chips">`+STATUS.tiles.map(x=>
-    `<span class="chip ${esc(x.value)}">${esc(x.label)}: <b>${esc(x.value)}</b></span>`).join('')+`</div>` : '';
-
   if(maptab==='dest'){
     shell('map', `
     <div class="eyebrow">Bricksurance Life · presenter's cockpit</div>
