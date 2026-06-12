@@ -205,6 +205,41 @@ ROADMAP = {
  ],
 }
 
+# ── AI desk (spec §5: agents contextual in management tabs; this is the light
+# index showcasing them together). All placeholders except the run overseer,
+# which is live inside the model points beat. Nothing is plumbed here. ───────
+AI_PAGE = {
+ "headline": "One desk, five specialists",
+ "lead": ("Ask in plain English; the question routes to the specialist that owns the answer. "
+          "One specialist is live today — the rest are stated openly, not simulated."),
+ "note": ("Every specialist works the same way: a governed agent over the recorded tables, "
+          "answering with the data and showing its working. They appear inside the beat they "
+          "serve — this page is just the roster."),
+ "agents": [
+  {"name": "Run overseer", "color": "blue", "status": "live",
+   "what": "Did it complete, anything quarantined, safe to release? Summarises run status, explains rejects, drafts the sign-off note.",
+   "lives": "Model points · management tab", "route": "#/flow/model-point-feed/manage",
+   "questions": ["Did the latest run complete, and was anything quarantined?",
+                 "Summarise the latest run for a sign-off note."]},
+  {"name": "Reconciliation", "color": "violet", "status": "placeholder",
+   "what": "Explains where the platform and the engine differ on a product — and why, per model point.",
+   "lives": "Modelling", "route": "#/block/modelling",
+   "questions": ["Where do the two engines differ on this product, and why?"]},
+  {"name": "Movement & disclosure", "color": "green", "status": "placeholder",
+   "what": "IFRS 17 movement attribution; drafts the disclosure commentary from the recorded movement.",
+   "lives": "Results", "route": "#/block/results",
+   "questions": ["Attribute this quarter's movement and draft the commentary."]},
+  {"name": "Experience", "color": "amber", "status": "placeholder",
+   "what": "Actual-vs-expected summary; proposes an assumption adjustment for the maker-checker workflow.",
+   "lives": "Assumptions", "route": "#/block/assumptions",
+   "questions": ["How did actual mortality run against the basis — and what adjustment would you propose?"]},
+  {"name": "Audit & documentation", "color": "slate", "status": "placeholder",
+   "what": "Drafts model documentation and the sign-off note; answers 'what fed this number' from lineage and the audit trail.",
+   "lives": "Governance", "route": "#/governance",
+   "questions": ["What fed this number? Walk me back to everything behind it."]},
+ ],
+}
+
 # ── POC plan (brief §12.3, narrowed to one term product). Canonical copy also
 # ships as POC_TERM_PRODUCT.md in the repo. ──────────────────────────────────
 POC_PLAN = {

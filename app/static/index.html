@@ -195,6 +195,27 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .askq{display:block;font-size:12px;font-weight:600;color:var(--v);cursor:pointer;margin-top:5px}
 .askans{margin-top:12px;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .askans pre{font-size:11px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:8px}
+/* AI desk */
+.askmock{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:18px}
+.askmock .fakeinput{border:1px dashed var(--line);border-radius:9px;padding:10px 14px;color:var(--muted);
+                    font-size:13px;background:var(--bg);display:flex;justify-content:space-between;align-items:center}
+.qgroup{margin-top:14px}
+.qgroup .qhead{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.qgroup .qhead b{color:var(--ink)}
+.qchip{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:999px;
+       padding:5px 13px;font-size:12.5px;margin:6px 6px 0 0;color:var(--ink)}
+a.qchip:hover{border-color:var(--v);color:var(--v)}
+.qchip.dead{opacity:.65}
+.roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+.acard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+       border-top:3px solid var(--line);display:block;color:var(--ink);transition:border-color .12s}
+a.acard:hover{border-color:var(--v)}
+.acard h3{font-size:14px;font-weight:700}
+.acard p{font-size:12.5px;color:var(--muted);margin-top:4px}
+.acard .lv{font-size:11px;color:var(--muted);margin-top:8px;font-weight:600}
+.acard.t-blue{border-top-color:#2563eb}.acard.t-violet{border-top-color:#7c3aed}
+.acard.t-green{border-top-color:#067647}.acard.t-amber{border-top-color:#d97706}
+.acard.t-slate{border-top-color:#64748b}
 /* placeholders + state tags */
 .ntag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
       border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:2px}
@@ -301,6 +322,7 @@ function shell(active, html){
       <a href="#/block/results" class="ph ${active==='results'?'on':''}">Results<span class="mini">planned</span></a>
       <div class="sec">Cross-cutting</div>
       <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
+      <a href="#/ai" class="ph ${active==='ai'?'on':''}">AI<span class="mini">preview</span></a>
       <a href="#/block/roadmap" class="ph ${active==='roadmap'?'on':''}">Roadmap<span class="mini">roadmap</span></a>
     </nav>
     <div class="sidefoot" style="padding-bottom:8px">
@@ -845,11 +867,45 @@ function pocPage(){
   Ships with the repo as POC_TERM_PRODUCT.md.</div>`);
 }
 
+function aiPage(){
+  const a = DATA.ai;
+  const groups = a.agents.map(g=>`
+    <div class="qgroup"><div class="qhead">→ routes to <b>${esc(g.name)}</b>${g.status==='live'
+        ?' <span class="ntag live">live</span>':' <span class="ntag coming">coming</span>'}</div>
+      ${g.questions.map(q=> g.status==='live'
+        ? `<a class="qchip" href="${g.route}">${esc(q)}</a>`
+        : `<span class="qchip dead">${esc(q)}</span>`).join('')}</div>`).join('');
+  const roster = a.agents.map(g=>`
+    <a class="acard t-${esc(g.color)}" href="${g.route}">
+      <h3>${esc(g.name)}${g.status==='live'?' <span class="ntag live">live</span>':' <span class="ntag placeholder">placeholder</span>'}</h3>
+      <p>${esc(g.what)}</p>
+      <div class="lv">Lives in: ${esc(g.lives)} →</div></a>`).join('');
+  shell('ai', `
+  <div class="crumb"><a href="#/">Overview</a> / AI</div>
+  <div class="eyebrow">LifeCast AI<span class="ntag coming">preview — placeholders, stated openly</span></div>
+  <h1 class="flow-h2">${esc(a.headline)}</h1>
+  <p class="lead">${esc(a.lead)}</p>
+
+  <div class="askmock">
+    <div class="fakeinput"><span>Ask the desk anything about a run, a number, or a difference…</span>
+      <span class="ntag coming">coming</span></div>
+    ${groups}
+  </div>
+
+  <div class="section" style="margin-top:24px"><span class="eyebrow">The specialists</span></div>
+  <div class="roster">${roster}</div>
+
+  <div class="scopenote">${esc(a.note)}</div>
+  <div class="foot">Nothing on this page simulates an answer. The live specialist opens where it
+  actually runs; the rest state intent — they get built when a beat lands.</div>`);
+}
+
 function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
   const parts = h.split('/').filter(Boolean);
   if(parts[0]==='destination') return landing('dest');
+  if(parts[0]==='ai') return aiPage();
   if(parts[0]==='poc') return pocPage();
   if(parts[0]==='personas') return personasPage();
   if(parts[0]==='terms') return termsPage();
