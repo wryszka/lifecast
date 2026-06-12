@@ -40,45 +40,63 @@ FLOWS = [
 {
  "id": "model-point-feed",
  "eyebrow": "Use case 01 — model point generator",
- "title": "Policy data → model point file, governed",
- "story": ("Every valuation starts the same way: policy admin data has to become the model "
-           "point file the existing actuarial engine reads — the licensed software that "
-           "projects premiums and claims decades ahead to value the liabilities. Here that "
-           "means 50,000 policies grouped to ~8,200 model points by attained age, sex, smoker "
-           "status and outstanding term, as at a valuation date. The engine itself is fine — "
-           "it's everything in front of it that's fragile, and when a regulator asks 'prove "
-           "what fed this number', today nobody can. Below: the journey as we typically see "
-           "it run, mapped step for step onto the same journey here. The engine doesn't "
-           "change at all."),
- "now_intro": "How we think this runs today — tell us where your shop differs:",
- "steps": [
-  {"n": "1", "title": "The feed lands",
-   "now": "A scheduled SQL job pulls policies from the admin system; the extract lands wherever it lands, named by convention.",
-   "text": "The nightly policy CSV drops on a governed volume and is ingested as-landed — bronze keeps the untouched record of what arrived.",
-   "code": ("Code — pipeline source", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
-   "live": ("The landing zone", "vol:")},
-  {"n": "2", "title": "Clean & quarantine",
-   "now": "An Excel workbook reshapes the extract into model points — formulas, paste areas, and one careful owner who knows its quirks.",
-   "text": "Typed, deduplicated, rule-checked. Seven illustrative rules ship — yours drop into the same structure. Every reject lands in quarantine with the exact rules it failed: parked for repair and resubmission, never discarded.",
-   "code": ("Code — same file, ~40 lines", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
-   "live": ("Pipeline graph, live", "pipeline:lifecast_model_point_pipeline")},
-  {"n": "3", "title": "The gate signs off",
-   "now": "Validation is an eyeball check if there's time; a bad extract is usually discovered after the engine has already run.",
-   "text": "Control totals reconciled against the last good run (policy count, sum assured — movement-checked), grouping proven to preserve totals, and GREEN on the record with the valuation date and the basis in force. RED stops the run before the file is touched. The thresholds are yours to set.",
-   "code": ("Code — gate notebook", "nb:01_model_point_pipeline/01_quality_gate"),
-   "live": ("Gate history", "tbl:gld_quality_dashboard")},
-  {"n": "4", "title": "The file the engine expects",
-   "now": "The file is dropped on a share; the existing actuarial engine picks it up in the overnight batch. No lineage from policy to model point.",
-   "text": "Model points in the exact layout the engine reads — attained age, duration in force, outstanding term, valuation date — downstream unchanged. Plus a read-only Excel extract for the eyeball check.",
-   "code": ("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
-   "live": ("The exported file", "vol:export"),
-   "peek": ("Peek inside the file — read-only", "#/file/mpf")},
+ "title": "Policy data → model point file",
+ "use_for": "We use this for: valuing the liabilities — what the firm must hold to pay future claims.",
+ # THE four-step skeleton — tabs 1 and 2 render it, tab 3 monitors it.
+ "skeleton": [
+  {"key": "data",           "title": "Data",           "plain": "Raw policy records — age, sex, smoker status, outstanding term."},
+  {"key": "transformation", "title": "Transformation", "plain": "Group them into a few thousand representative model points."},
+  {"key": "control",        "title": "Control",        "plain": "Check counts and totals reconcile before anything moves forward."},
+  {"key": "result",         "title": "Result",         "plain": "The file the engine reads."},
  ],
- "lever": {
-   "text": "Break it in front of them: inject a deliberately bad feed, run the overnight job, "
-           "watch the gate go RED and stop the run — then restore and run it GREEN.",
-   "links": [("Bad feed lever", "job:lifecast_bad_feed_day"),
-             ("Overnight run", "job:lifecast_overnight_run")],
+ "tab1": {
+  "lead": "Every valuation turns raw policy records into the summarised file the engine reads — that's model point creation, and it's the same four steps everywhere.",
+ },
+ "tab2": {
+  "lead": "The same four steps as they run today, and what each becomes — the engine reads the exact same file at the end.",
+  "swaps": [
+   {"old": "Manual CSV pulled and emailed",
+    "new": "Automated ingestion from the policy table",
+    "links": [("Code — pipeline source", "nb_file:01_model_point_pipeline/00_model_point_pipeline.py"),
+              ("The landing zone", "vol:")]},
+   {"old": "Reshaping in one person's Excel workbook",
+    "new": "A governed pipeline anyone can run; rejects quarantined, never lost",
+    "links": [("Pipeline graph, live", "pipeline:lifecast_model_point_pipeline"),
+              ("Quarantine — every reject, with reasons", "tbl:slv_policies_quarantine")]},
+   {"old": "Eyeball check if there's time",
+    "new": "An automatic gate; counts and totals reconciled; red stops the run",
+    "links": [("Code — gate notebook", "nb:01_model_point_pipeline/01_quality_gate"),
+              ("Gate history", "tbl:gld_quality_dashboard")]},
+   {"old": "File dropped on a share, no lineage",
+    "new": "The same engine file, full lineage policy → model point (+ read-only Excel for the eyeball habit)",
+    "links": [("Code — export notebook", "nb:01_model_point_pipeline/02_export_model_point_file"),
+              ("The exported file", "vol:export")],
+    "peek": ("Peek inside the file — read-only", "#/file/mpf")},
+  ],
+  "handoff": {
+   "ours": "Model point file",
+   "theirs": "The engine reads it — downstream, unchanged",
+   "text": "We rebuilt everything up to this file; the engine never moves. That's the no-risk transition.",
+   "next_label": "Next: the assumptions",
+   "next_link": "folder:02_assumption_governance",
+  },
+  "scope": ("Deliberately one product and one feed — this is the scaffold, not your estate. "
+            "Your products, your rules and your admin systems map in during discovery; "
+            "the structure they drop into is what you just saw."),
+ },
+ "tab3": {
+  "lead": "Once it's live, here's how you run it and prove it's healthy.",
+  "run_help": "The whole run takes about two minutes. Breaking it is allowed — that's what the bad feed button is for; restore puts everything back.",
+  "agent": {
+   "genie_title": "LifeCast — Run health",
+   "intro": "A plain-English overseer on the run record — ask it anything an approver would ask.",
+   "questions": [
+    "Did the latest run complete, and was anything quarantined?",
+    "Explain the rejects in quarantine — which rules failed, and how many rows each?",
+    "Do the control totals reconcile with the previous run?",
+    "Summarise the latest run for a sign-off note: verdict, volumes in and out, quarantine, movement and grouping checks, and the basis used.",
+   ],
+  },
  },
  "beat": [
   {"do": "Run the overnight job (≈2 min — yes, the 'overnight' run).",
@@ -87,22 +105,19 @@ FLOWS = [
   {"do": "Open the Governance tab.",
    "expect": "The GREEN row: movement 0.0% vs the last good run, grouping PASS, signed off.",
    "say": "Which extract and which basis fed which run — recorded, not remembered."},
-  {"do": "Run the bad-feed job (defaults = inject, ≈1 min).",
+  {"do": "Inject the bad feed (button above, ≈1 min).",
    "expect": "A deliberately corrupted feed lands next to the clean one.",
    "say": "A corrupted extract has just arrived — exactly what happens at quarter end."},
   {"do": "Run the overnight job again (≈2 min).",
    "expect": "It FAILS at the quality gate — that is the success state of this demo: ~3,500 rows quarantined (≈6.5%), six rules firing.",
    "say": "The failed run is the control working. The rejects are parked with reasons, the model point file is untouched, and the engine never sees bad data."},
-  {"do": "Back to Governance: the RED row.",
-   "expect": "No sign-off on the RED run, per-rule bars below.",
-   "say": "Nobody signs a failed gate — and the regulator can read exactly why it failed."},
-  {"do": "Run the bad-feed job with action=restore (≈3 min), then the overnight job once more.",
+  {"do": "Ask the overseer: 'explain the rejects in quarantine'.",
+   "expect": "A plain-English breakdown by rule, straight off the record.",
+   "say": "Nobody signs a failed gate — and anyone can ask why it failed, in English."},
+  {"do": "Restore (button above, ≈3 min), then run the overnight job once more.",
    "expect": "GREEN again. The whole loop took ten minutes.",
    "say": "Today this failure costs the actuary a morning. Here it cost one click and a coffee."},
  ],
- "scope": ("Deliberately one product and one feed — this is the scaffold, not your estate. "
-           "Your products, your ~140 rules and your admin systems map in during discovery; "
-           "the structure they drop into is what you just saw."),
 },
 ]
 

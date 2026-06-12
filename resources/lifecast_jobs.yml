@@ -41,6 +41,10 @@ resources:
           environment_key: default
           notebook_task:
             notebook_path: ../04_scenario_management/00_external_scenarios_mock.py
+        - task_key: run_health_genie
+          environment_key: default
+          notebook_task:
+            notebook_path: ../01_model_point_pipeline/04_create_run_health_genie.py
 
     # Phase 1 — the governed overnight run. Pipeline refresh -> quality gate
     # -> export. A bad extract fails the gate and STOPS the run before the

@@ -101,6 +101,52 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .rulebar .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .scopenote{margin-top:18px;font-size:12.5px;color:var(--muted);background:var(--card);
            border:1px dashed var(--line);border-radius:10px;padding:10px 14px}
+/* three tabs */
+.subtabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.subtab{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 16px;
+        font-size:13px;font-weight:600;color:var(--muted)}
+.subtab.on{background:var(--v);border-color:var(--v);color:#fff}
+.subtab:hover{border-color:var(--v);color:var(--v)} .subtab.on:hover{color:#fff}
+.usefor{margin-top:8px;font-size:13px;color:var(--muted);font-style:italic}
+.lead{margin-top:16px;font-size:16px;font-weight:600;max-width:780px}
+.swaprow{display:grid;grid-template-columns:34px 1fr 44px 1fr;gap:12px;align-items:stretch;margin-top:12px}
+.swaprow .sn{width:30px;height:30px;border-radius:9px;background:var(--v50);color:var(--v);font-weight:800;
+             font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:14px}
+.swaprow .arr{display:flex;align-items:center;justify-content:center;color:var(--v);font-size:19px;font-weight:800}
+.swapold{background:var(--amber-bg);border:1px solid #fedf89;border-radius:12px;padding:13px 15px;
+         font-size:13px;color:#7a5300;display:flex;flex-direction:column;justify-content:center}
+.swapold .sl{font-size:10px;font-weight:800;letter-spacing:.1em;color:#d6a946;margin-bottom:3px}
+.swapnew{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:13px}
+.swapnew .sl{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--v);margin-bottom:3px}
+.swapnew .lnk{display:inline-block;font-size:12px;font-weight:600;margin:5px 14px 0 0}
+.handoff{display:grid;grid-template-columns:1fr 44px 1.4fr;gap:0;margin-top:22px;align-items:stretch}
+.handoff .ours{background:var(--v50);border:1px solid var(--v100);border-radius:12px 0 0 12px;
+               padding:16px 18px;font-weight:700}
+.handoff .ours .sl{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--v);display:block;margin-bottom:4px}
+.handoff .boundary{border-left:3px dashed var(--v);display:flex;align-items:center;justify-content:center;
+                   position:relative}
+.handoff .boundary span{position:absolute;top:-9px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;
+                        color:var(--v);background:var(--bg);padding:0 4px;white-space:nowrap}
+.handoff .theirs{background:var(--bg);border:1px dashed var(--line);border-radius:0 12px 12px 0;
+                 padding:16px 18px;color:var(--muted)}
+.handoff .theirs .sl{font-size:10px;font-weight:800;letter-spacing:.1em;display:block;margin-bottom:4px}
+.handoffnote{margin-top:10px;font-size:13px;max-width:760px}
+.nextlink{display:inline-block;margin-top:10px;font-weight:700;font-size:13px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:16px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.mcard h3{font-size:14px;font-weight:700;margin-bottom:8px}
+.mcard .mline{font-size:13px;margin:6px 0}
+.mcard .mline b.GREEN,.mcard .mline b.SUCCESS{color:var(--green)} .mcard .mline b.RED,.mcard .mline b.FAILED{color:#b42318}
+.mbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn2{display:inline-block;background:var(--card);border:1px solid var(--v);color:var(--v);font-weight:600;
+      font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer}
+.btn2:hover{background:var(--v50)}
+.askbox{margin-top:10px}
+.askbox textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:inherit;
+                 font-size:13px;resize:vertical;min-height:44px}
+.askq{display:block;font-size:12px;font-weight:600;color:var(--v);cursor:pointer;margin-top:5px}
+.askans{margin-top:12px;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.askans pre{font-size:11px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:8px}
 /* runbook + terms */
 .beat{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .beat summary{cursor:pointer;padding:14px 18px;font-weight:700;font-size:14px;color:var(--v);list-style:none}
@@ -198,96 +244,153 @@ function landing(){
   simulates a business process — every link opens the real Databricks asset.</div>`;
 }
 
-function flowPage(fid){
+function flowPage(fid, tab){
   const f = DATA.flows.find(x=>x.id===fid); if(!f) return landing();
+  tab = tab || 'process';
   loadGov().then(g=>{
     const r=(g.runs||[])[0]; if(!r) return;
     const el=document.getElementById('flowchips'); if(!el) return;
     el.innerHTML = [
       `Valuation date: <b>${esc(r.valuation_date||'—')}</b>`,
-      `Last run: <b class="${esc(r.verdict)}" style="color:${r.verdict==='GREEN'?'var(--green)':'#b42318'}">${esc(r.verdict)}</b>`,
-      `${Number(r.rows_bronze).toLocaleString()} rows landed`,
+      `Last run: <b style="color:${r.verdict==='GREEN'?'var(--green)':'#b42318'}">${esc(r.verdict)}</b>`,
       r.policies_in_scope?`<b>${Number(r.policies_in_scope).toLocaleString()}</b> policies → <b>${Number(r.model_points).toLocaleString()}</b> model points`:null,
-      r.movement_check && r.movement_check!=='—' ? `movement vs last good run: <b>${esc(r.movement_check)}</b>${r.movement_policies_pct!=null?` (Δ ${esc(r.movement_policies_pct)}%)`:''}` : null,
+      r.movement_check && r.movement_check!=='—' ? `movement: <b>${esc(r.movement_check)}</b>` : null,
     ].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');
   });
-  const nows = f.steps.map(s=>
-    `<div class="nowcard"><span class="nlbl">NOW</span>${esc(s.now)}</div>`).join('');
-  const arrows = f.steps.map(()=>'<div>↓</div>').join('');
-  const steps = f.steps.map(s=>
-    `<div class="step"><div class="num">${esc(s.n)}</div><h3>${esc(s.title)}</h3>
-       <p>${esc(s.text)}</p>
-       <a class="lnk" href="${s.code.url}" target="_blank">${esc(s.code.label)} ↗</a>
-       <a class="lnk" href="${s.live.url}" target="_blank">${esc(s.live.label)} ↗</a>
-       ${s.peek?`<a class="lnk" href="${s.peek.hash}">${esc(s.peek.label)} →</a>`:''}</div>`).join('');
+
+  const tabs = [['process',"What we're showing"],['oldnew','Old → new'],['manage','Management']];
+  const subnav = `<div class="subtabs">${tabs.map(([k,l])=>
+    `<a class="subtab ${tab===k?'on':''}" href="#/flow/${f.id}/${k}">${esc(l)}</a>`).join('')}</div>`;
+
+  let body='';
+  if(tab==='process'){
+    body = `<p class="lead">${esc(f.tab1.lead)}</p>
+    <div class="usefor">${esc(f.use_for)}</div>
+    <div class="mapgrid" style="margin-top:18px">${f.skeleton.map((st,i)=>
+      `<div class="step"><div class="num">${i+1}</div><h3>${esc(st.title)}</h3>
+         <p>${esc(st.plain)}</p></div>`).join('')}</div>
+    <div class="maparrows" style="margin-top:6px">${f.skeleton.map((_,i)=>
+      `<div>${i<f.skeleton.length-1?'':''}</div>`).join('')}</div>`;
+  }
+  if(tab==='oldnew'){
+    body = `<p class="lead">${esc(f.tab2.lead)}</p>` +
+    f.tab2.swaps.map((sw,i)=>`<div class="swaprow">
+      <div class="sn">${i+1}</div>
+      <div class="swapold"><span class="sl">${esc(f.skeleton[i].title)} · old</span>${esc(sw.old)}</div>
+      <div class="arr">→</div>
+      <div class="swapnew"><span class="sl">${esc(f.skeleton[i].title)} · new</span>${esc(sw.new)}<div>
+        ${sw.links.map(x=>`<a class="lnk" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}
+        ${sw.peek?`<a class="lnk" href="${sw.peek.hash}">${esc(sw.peek.label)} →</a>`:''}</div></div>
+    </div>`).join('') +
+    `<div class="handoff">
+      <div class="ours"><span class="sl">Our scope ends here</span>${esc(f.tab2.handoff.ours)}</div>
+      <div class="boundary"><span>scope boundary</span></div>
+      <div class="theirs"><span class="sl">Downstream — unchanged</span>${esc(f.tab2.handoff.theirs)}</div>
+    </div>
+    <div class="handoffnote">${esc(f.tab2.handoff.text)}</div>
+    <a class="nextlink" href="${f.tab2.handoff.next_url}" target="_blank">${esc(f.tab2.handoff.next_label)} →</a>
+    <div class="scopenote">${esc(f.tab2.scope)}</div>`;
+  }
+  if(tab==='manage'){
+    body = `<p class="lead">${esc(f.tab3.lead)}</p>
+    <div class="mgrid">
+      <div class="mcard"><h3>Run control</h3><div id="runctl">Loading…</div>
+        <div class="mbtns">
+          <button class="btn2" onclick="triggerRun('run',this)">Run now</button>
+          <button class="btn2" onclick="triggerRun('inject',this)">Inject bad feed</button>
+          <button class="btn2" onclick="triggerRun('restore',this)">Restore</button></div>
+        <div class="mline" id="trigmsg" style="color:var(--muted)"></div>
+        <div class="mline" style="color:var(--muted);font-size:12px">${esc(f.tab3.run_help)}</div></div>
+      <div class="mcard"><h3>Issues</h3><div id="issues">Loading…</div></div>
+      <div class="mcard"><h3>The overseer</h3>
+        <div class="mline" style="color:var(--muted)">${esc(f.tab3.agent.intro)}
+          <a href="${f.tab3.agent.genie_url}" target="_blank">Open ${esc(f.tab3.agent.genie_title)} ↗</a></div>
+        <div class="askbox"><textarea id="askq" placeholder="Ask about the latest run…"></textarea>
+          <div class="mbtns"><button class="btn2" onclick="askOverseer()">Ask</button></div>
+          ${f.tab3.agent.questions.map(q=>`<span class="askq" onclick="document.getElementById('askq').value=this.textContent;askOverseer()">${esc(q)}</span>`).join('')}
+          <div id="askans"></div></div></div>
+    </div>
+    <details class="beat"><summary>Run this beat — the 10-minute click path</summary>
+      <div class="b-steps">${f.beat.map((b,i)=>
+        `<div class="b-step"><div class="bn">${i+1}</div><div>
+           <div class="bdo">${esc(b.do)}</div>
+           <div class="bex">Expect: ${esc(b.expect)}</div>
+           <div class="bsay">${esc(b.say)}</div></div></div>`).join('')}</div></details>`;
+    setTimeout(loadRunControl, 0);
+  }
+
   root.innerHTML = nav('home') + `
   <div class="crumb"><a href="#/">LifeCast</a> / ${esc(f.eyebrow)}</div>
   <div class="eyebrow">${esc(f.eyebrow)}</div>
   <h1 class="flow-h2">${esc(f.title)}</h1>
-  <p class="story">${esc(f.story)}</p>
-
-  <div class="lanetag now">Now — ${esc(f.now_intro)}</div>
-  <div class="mapgrid">${nows}</div>
-  <div class="maparrows">${arrows}</div>
-  <div class="lanetag here" style="margin-top:0">Here — the same step, governed; code one click away</div>
-  <div class="mapgrid">${steps}</div>
-
-  <div class="chips" id="flowchips" style="margin-top:16px"></div>
-
-  <div class="lever"><div><span class="tag">Prove it live</span><p>${esc(f.lever.text)}</p></div>
-    <div class="gobtns">${f.lever.links.map(x=>`<a class="btn" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}</div></div>
-
-  <details class="beat"><summary>Run this beat — the 10-minute click path</summary>
-    <div class="b-steps">${f.beat.map((b,i)=>
-      `<div class="b-step"><div class="bn">${i+1}</div><div>
-         <div class="bdo">${esc(b.do)}</div>
-         <div class="bex">Expect: ${esc(b.expect)}</div>
-         <div class="bsay">${esc(b.say)}</div></div></div>`).join('')}</div></details>
-
-  <div class="scopenote">${esc(f.scope)}</div>
-
-  <div class="foot">The "now" lane is how we typically see this run — if your shop differs, that's
-  exactly the conversation. Every link on the lower lane opens the real asset.
+  <div class="chips" id="flowchips" style="margin-top:10px"></div>
+  ${subnav}
+  ${body}
+  <div class="foot">Every link opens the real Databricks asset — the cockpit annotates, it never simulates.
   New to the terminology? <a href="#/terms">Eight terms, one line each</a>.</div>`;
 }
 
-function termsPage(){
-  root.innerHTML = nav('home') + `
-  <div class="crumb"><a href="#/">LifeCast</a> / terms</div>
-  <div class="eyebrow">Before you present</div>
-  <h1 class="flow-h2">Eight terms, one line each</h1>
-  <p class="story">Enough to survive the first follow-up question. The full learn-this-process
-  module is coming; until then, these are the words that matter.</p>
-  ${DATA.terms.map(t=>`<div class="termrow"><b>${esc(t.term)}</b><span>${esc(t.text)}</span></div>`).join('')}
-  <div class="foot">Client-safe — nothing here you couldn't say with the prospect in the room.</div>`;
+async function loadRunControl(){
+  let d; try{ d = await (await fetch('api/runcontrol')).json(); }catch(e){ d={}; }
+  const rc=document.getElementById('runctl');
+  if(rc){
+    if(d.job){
+      const l=d.job.last;
+      rc.innerHTML = `<div class="mline">Job: <a href="${d.job.url}" target="_blank">${esc(d.job.name)} ↗</a></div>
+        <div class="mline">${esc(d.job.schedule)}</div>` +
+        (l?`<div class="mline">Last run: <b class="${esc(l.state)}">${esc(l.state)}</b> · ${esc(l.when)} ·
+            <a href="${l.url}" target="_blank">open ↗</a></div>`:'');
+    } else rc.innerHTML = '<div class="mline" style="color:var(--muted)">Run status unavailable.</div>';
+  }
+  const is=document.getElementById('issues');
+  if(is){
+    if(d.gate){
+      let rules={}; try{ rules=JSON.parse(d.gate.rules||'{}'); }catch(e){}
+      const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
+      const max=Math.max(...entries.map(e=>e[1]),1);
+      is.innerHTML = `<div class="mline">Latest gate: <b class="${esc(d.gate.verdict)}">${esc(d.gate.verdict)}</b> · ${esc(d.gate.when)}</div>
+        <div class="mline">In quarantine: <b>${Number(d.gate.quarantined).toLocaleString()}</b> rows ·
+          movement ${esc(d.gate.movement||'—')} · grouping ${esc(d.gate.grouping||'—')}</div>` +
+        (entries.length?entries.map(([k,v])=>`<div class="rulebar"><span class="rname" style="flex-basis:150px">${esc(k)}</span>
+           <span class="bar" style="width:${Math.round(120*v/max)}px"></span>
+           <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join(''):
+          '<div class="mline" style="color:var(--muted)">Nothing in quarantine — the book is clean.</div>') +
+        `<div class="mline" style="color:var(--muted);font-size:12px">${d.gate.verdict==='RED'
+          ?'What to do: review the quarantine reasons, fix or restore the feed, rerun — the file was never touched.'
+          :'What to do: nothing. The gate signed off and the file is released.'}</div>`;
+    } else is.innerHTML = '<div class="mline" style="color:var(--muted)">No gate record yet — run the overnight job.</div>';
+  }
 }
 
-function personaPage(pid){
-  const p = DATA.personas.find(x=>x.id===pid); if(!p) return landing();
-  const items = p.cards.map(c=>
-    `<div class="card qitem" onclick="location.hash='#/p/${p.id}/${c.id}'">
-       <h2>${esc(c.question)}</h2><span class="arr">→</span></div>`).join('');
-  root.innerHTML = header(`<a href="#/">Cockpit</a> / ${esc(p.title)}`) +
-    `<div class="section"><div class="eyebrow">${esc(p.title)} — the questions</div></div>
-     <div class="grid">${items}</div>`;
+async function triggerRun(action, btn){
+  const labels={run:'the overnight run',inject:'the bad feed injection',restore:'the restore'};
+  if(!confirm(`Start ${labels[action]}?`)) return;
+  const msg=document.getElementById('trigmsg');
+  msg.textContent='Starting…';
+  try{
+    const r = await (await fetch('api/run/trigger',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({action})})).json();
+    msg.innerHTML = r.ok ? `Started — <a href="${r.url}" target="_blank">watch the run ↗</a>` : esc(r.error||'Failed.');
+  }catch(e){ msg.textContent='Failed to start.'; }
 }
 
-function cardPage(pid, cid){
-  const p = DATA.personas.find(x=>x.id===pid); if(!p) return landing();
-  const c = p.cards.find(x=>x.id===cid); if(!c) return personaPage(pid);
-  root.innerHTML = header(`<a href="#/">Cockpit</a> / <a href="#/p/${p.id}">${esc(p.title)}</a> / card`) + `
-  <div class="card" style="margin-top:20px">
-    <h2>“${esc(c.question)}”</h2>
-    <div class="section"><span class="eyebrow">Proves</span><div class="proves">${esc(c.proves)}</div></div>
-    <div class="section"><span class="eyebrow">Where it lives</span>
-      <ul class="where body">${c.where.map(x=>`<li><a href="${x.url}" target="_blank">${esc(x.label)} ↗</a></li>`).join('')}</ul></div>
-    <div class="section"><span class="eyebrow">Build &amp; control</span><div class="body">${esc(c.build)}</div></div>
-    <div class="section"><span class="eyebrow">Go</span>
-      <div class="gobtns">${c.links.map(x=>`<a class="btn" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}</div></div>
-    <div class="section"><span class="eyebrow">Today → tomorrow</span>
-      <div class="tt"><div class="t today"><span class="tag">Today</span>${esc(c.today)}</div>
-      <div class="t tomorrow"><span class="tag">Tomorrow</span>${esc(c.tomorrow)}</div></div></div>
-  </div>`;
+async function askOverseer(){
+  const q=document.getElementById('askq').value.trim(); if(!q) return;
+  const out=document.getElementById('askans');
+  out.innerHTML='<div class="askans">The overseer is reading the run record…</div>';
+  try{
+    const r = await (await fetch('api/ask',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})).json();
+    if(r.error){ out.innerHTML=`<div class="askans">${esc(r.error)}</div>`; return; }
+    let html = r.texts.map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join('');
+    if(r.table){
+      html += `<div style="overflow-x:auto"><table class="gtable" style="margin-top:6px">
+        <tr>${r.table.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>
+        ${r.table.rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+    }
+    if(r.sql) html += `<details style="margin-top:6px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">the SQL it ran</summary><pre>${esc(r.sql)}</pre></details>`;
+    out.innerHTML = `<div class="askans">${html||'No answer.'}</div>`;
+  }catch(e){ out.innerHTML='<div class="askans">Could not reach the overseer.</div>'; }
 }
 
 async function governancePage(){
@@ -410,7 +513,7 @@ function route(){
   if(parts[0]==='terms') return termsPage();
   if(parts[0]==='file' && parts[1]) return filePage(parts[1]);
   if(parts[0]==='governance') return governancePage();
-  if(parts[0]==='flow' && parts[1]) return flowPage(parts[1]);
+  if(parts[0]==='flow' && parts[1]) return flowPage(parts[1], parts[2]);
   if(parts[0]==='p' && parts[2]) return cardPage(parts[1], parts[2]);
   if(parts[0]==='p' && parts[1]) return personaPage(parts[1]);
   landing();

@@ -44,7 +44,8 @@ def _resolve_ids() -> dict:
     now = time.time()
     if now - _links_cache["at"] < 300 and _links_cache["ids"]:
         return _links_cache["ids"]
-    ids: dict = {"jobs": {}, "pipelines": {}, "dashboard": None, "genie": None, "experiments": {}}
+    ids: dict = {"jobs": {}, "pipelines": {}, "dashboard": None, "genie": None,
+                 "genie_runhealth": None, "experiments": {}}
     try:
         for j in w().jobs.list():
             name = j.settings.name or ""
@@ -68,6 +69,8 @@ def _resolve_ids() -> dict:
         for s in spaces:
             if s.get("title") == "LifeCast — Results":
                 ids["genie"] = s["space_id"]
+            if s.get("title") == "LifeCast — Run health":
+                ids["genie_runhealth"] = s["space_id"]
     except Exception:
         pass
     for key, path in [("projection", "/Shared/lifecast/05_projection_migration/projection"),
@@ -111,6 +114,9 @@ def resolve_link(key: str) -> str:
     if kind == "genie":
         return (f"{HOST}/genie/rooms/{ids['genie']}" if ids["genie"]
                 else f"{HOST}/#workspace/Shared/lifecast/03_results_and_genie")
+    if kind == "genie_runhealth":
+        return (f"{HOST}/genie/rooms/{ids['genie_runhealth']}" if ids["genie_runhealth"]
+                else f"{HOST}/#workspace/Shared/lifecast/01_model_point_pipeline")
     if kind == "exp":
         eid = ids["experiments"].get(arg)
         return f"{HOST}/ml/experiments/{eid}" if eid else f"{HOST}/ml/experiments"
@@ -126,19 +132,24 @@ def resolve_link(key: str) -> str:
 def content():
     flows = []
     for f in FLOWS:
+        swaps = []
+        for sw in f["tab2"]["swaps"]:
+            swaps.append({
+                "old": sw["old"], "new": sw["new"],
+                "links": [{"label": lbl, "url": resolve_link(k)} for lbl, k in sw["links"]],
+                **({"peek": {"label": sw["peek"][0], "hash": sw["peek"][1]}} if "peek" in sw else {}),
+            })
+        h = f["tab2"]["handoff"]
         flows.append({
-            "id": f["id"], "eyebrow": f["eyebrow"], "title": f["title"], "story": f["story"],
-            "now_intro": f["now_intro"],
-            "steps": [{
-                "n": s["n"], "title": s["title"], "now": s["now"], "text": s["text"],
-                "code": {"label": s["code"][0], "url": resolve_link(s["code"][1])},
-                "live": {"label": s["live"][0], "url": resolve_link(s["live"][1])},
-                **({"peek": {"label": s["peek"][0], "hash": s["peek"][1]}} if "peek" in s else {}),
-            } for s in f["steps"]],
-            "lever": {"text": f["lever"]["text"],
-                      "links": [{"label": lbl, "url": resolve_link(k)} for lbl, k in f["lever"]["links"]]},
+            "id": f["id"], "eyebrow": f["eyebrow"], "title": f["title"], "use_for": f["use_for"],
+            "skeleton": f["skeleton"],
+            "tab1": f["tab1"],
+            "tab2": {"lead": f["tab2"]["lead"], "swaps": swaps, "scope": f["tab2"]["scope"],
+                     "handoff": {"ours": h["ours"], "theirs": h["theirs"], "text": h["text"],
+                                 "next_label": h["next_label"], "next_url": resolve_link(h["next_link"])}},
+            "tab3": {"lead": f["tab3"]["lead"], "run_help": f["tab3"]["run_help"],
+                     "agent": {**f["tab3"]["agent"], "genie_url": resolve_link("genie_runhealth")}},
             "beat": f["beat"],
-            "scope": f["scope"],
         })
     personas = []
     for p in PERSONAS:
@@ -195,6 +206,122 @@ def status():
         except Exception:
             tiles.append({"label": label, "value": "—", "detail": "status unavailable (grant pending?)"})
     return {"tiles": tiles}
+
+
+# ── Management tab: run control, trigger, and the Genie overseer proxy ──────
+RUN_JOBS = {"overnight": "lifecast_overnight_run", "bad_feed": "lifecast_bad_feed_day"}
+
+
+@app.get("/api/runcontrol")
+def runcontrol():
+    """Read: last run state + schedule for the overnight job, latest gate
+    verdict and quarantine picture. Tab 3's live panel."""
+    out = {"job": None, "gate": None, "quarantine": None}
+    try:
+        jid = _resolve_ids()["jobs"].get(RUN_JOBS["overnight"])
+        if jid:
+            job = w().jobs.get(jid)
+            sched = "On demand (schedule it when you go live — it's one block of config)"
+            if job.settings.schedule:
+                sched = f"Scheduled: {job.settings.schedule.quartz_cron_expression}"
+            runs = list(w().jobs.list_runs(job_id=jid, limit=1))
+            last = None
+            if runs:
+                r = runs[0]
+                import datetime
+                state = (r.state.result_state.value if r.state and r.state.result_state
+                         else (r.state.life_cycle_state.value if r.state else "—"))
+                last = {"state": state,
+                        "when": datetime.datetime.fromtimestamp((r.start_time or 0) / 1000).strftime("%d %b %H:%M"),
+                        "url": f"{HOST}/jobs/{jid}/runs/{r.run_id}"}
+            out["job"] = {"name": RUN_JOBS["overnight"], "url": f"{HOST}/jobs/{jid}",
+                          "schedule": sched, "last": last}
+    except Exception:
+        pass
+    try:
+        T = f"`{CATALOG}`.`{SCHEMA}`"
+        r = _sql_one(f"SELECT verdict, date_format(run_ts,'dd MMM HH:mm'), rows_quarantined, "
+                     f"rule_breakdown, movement_check, grouping_check FROM {T}.gld_quality_dashboard LIMIT 1")
+        if r:
+            out["gate"] = {"verdict": r[0], "when": r[1], "quarantined": int(r[2]),
+                           "rules": r[3], "movement": r[4], "grouping": r[5]}
+    except Exception:
+        pass
+    return out
+
+
+from pydantic import BaseModel
+
+
+class TriggerReq(BaseModel):
+    action: str  # run | inject | restore
+
+
+@app.post("/api/run/trigger")
+def trigger(req: TriggerReq):
+    """Action: start an allowlisted job. The only writes the cockpit makes."""
+    ids = _resolve_ids()["jobs"]
+    try:
+        if req.action == "run":
+            jid = ids.get(RUN_JOBS["overnight"])
+            run = w().jobs.run_now(jid)
+        elif req.action in ("inject", "restore"):
+            jid = ids.get(RUN_JOBS["bad_feed"])
+            run = w().jobs.run_now(jid, job_parameters={"action": req.action})
+        else:
+            return {"error": "unknown action"}
+        return {"ok": True, "url": f"{HOST}/jobs/{jid}/runs/{run.run_id}"}
+    except Exception:
+        return {"error": "Could not start the job — does the app have CAN_MANAGE_RUN on it?"}
+
+
+class AskReq(BaseModel):
+    question: str
+
+
+@app.post("/api/ask")
+def ask(req: AskReq):
+    """Proxy to the LifeCast — Run health Genie space. Nothing is computed here;
+    the overseer is the real Genie agent, rendered verbatim."""
+    import time as _time
+
+    sid = _resolve_ids().get("genie_runhealth")
+    if not sid:
+        return {"error": "Run-health Genie space not found — run the foundation job's genie task."}
+    try:
+        start = w().api_client.do("POST", f"/api/2.0/genie/spaces/{sid}/start-conversation",
+                                  body={"content": req.question[:500]})
+        cid, mid = start["conversation_id"], start["message_id"]
+        for _ in range(40):
+            msg = w().api_client.do("GET", f"/api/2.0/genie/spaces/{sid}/conversations/{cid}/messages/{mid}")
+            if msg.get("status") in ("COMPLETED", "FAILED"):
+                break
+            _time.sleep(3)
+        if msg.get("status") != "COMPLETED":
+            return {"error": "The overseer didn't answer in time — open the Genie space directly."}
+        out = {"texts": [], "sql": None, "table": None}
+        for a in msg.get("attachments", []):
+            if "text" in a:
+                out["texts"].append(a["text"].get("content", ""))
+            if "query" in a:
+                out["sql"] = a["query"].get("query")
+                if a["query"].get("description"):
+                    out["texts"].insert(0, a["query"]["description"])
+                try:
+                    qr = w().api_client.do(
+                        "GET",
+                        f"/api/2.0/genie/spaces/{sid}/conversations/{cid}/messages/{mid}"
+                        f"/attachments/{a['attachment_id']}/query-result")
+                    sr = qr.get("statement_response", {})
+                    cols = [c["name"] for c in sr.get("manifest", {}).get("schema", {}).get("columns", [])]
+                    rows = (sr.get("result", {}) or {}).get("data_array", [])[:20]
+                    if cols:
+                        out["table"] = {"columns": cols, "rows": rows}
+                except Exception:
+                    pass
+        return out
+    except Exception:
+        return {"error": "Could not reach the overseer — does the app have access to the Genie space?"}
 
 
 # Read-only file previews — the actual exported artifacts, first rows only.
