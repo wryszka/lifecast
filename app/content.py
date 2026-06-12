@@ -238,6 +238,18 @@ AI_PAGE = {
    "lives": "Governance", "route": "#/governance",
    "questions": ["What fed this number? Walk me back to everything behind it."]},
  ],
+ "dev_help": {
+  "lead": ("And the AI that helps you build all of this in the first place — not our agents, "
+           "the platform's own assistance, there from day one of the workshop."),
+  "items": [
+   {"name": "Genie Code — in the notebook",
+    "what": "A pair-programmer where the work happens: scaffolds the pipeline, drafts the projection code, explains an error, refactors your actuaries' Python as they write it."},
+   {"name": "Dashboards from a prompt",
+    "what": "Describe the view — BEL by product, movement by quarter — and AI/BI drafts the dashboard over the governed tables. Tweak, don't build."},
+   {"name": "Ask the data in English",
+    "what": "Genie spaces over any governed table — the same capability behind the run overseer, available on every dataset you land."},
+  ],
+ },
 }
 
 # ── POC plan (brief §12.3, narrowed to one term product). Canonical copy also

@@ -895,6 +895,12 @@ function aiPage(){
   <div class="section" style="margin-top:24px"><span class="eyebrow">The specialists</span></div>
   <div class="roster">${roster}</div>
 
+  <div class="section" style="margin-top:24px"><span class="eyebrow">AI development help — built into the platform</span></div>
+  <p class="sub" style="margin-top:6px;max-width:780px">${esc(a.dev_help.lead)}</p>
+  <div class="phgrid" style="margin-top:10px">
+    ${a.dev_help.items.map(i=>`<div class="gain"><b>${esc(i.name)}</b><p>${esc(i.what)}</p></div>`).join('')}
+  </div>
+
   <div class="scopenote">${esc(a.note)}</div>
   <div class="foot">Nothing on this page simulates an answer. The live specialist opens where it
   actually runs; the rest state intent — they get built when a beat lands.</div>`);
