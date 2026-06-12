@@ -497,6 +497,354 @@ async function filePage(key){
   governed volume; lineage links it back to every policy row that produced it.</div>`);
 }
 
+function flowPage(fid, tab){
+  const f = DATA.flows.find(x=>x.id===fid); if(!f) return landing();
+  tab = tab || 'process';
+  loadGov().then(g=>{
+    const r=(g.runs||[])[0]; if(!r) return;
+    const el=document.getElementById('flowchips'); if(!el) return;
+    el.innerHTML = [
+      `Valuation date: <b>${esc(r.valuation_date||'—')}</b>`,
+      `Last run: <b style="color:${r.verdict==='GREEN'?'var(--green)':'#b42318'}">${esc(r.verdict)}</b>`,
+      r.policies_in_scope?`<b>${Number(r.policies_in_scope).toLocaleString()}</b> policies → <b>${Number(r.model_points).toLocaleString()}</b> model points`:null,
+      r.movement_check && r.movement_check!=='—' ? `movement: <b>${esc(r.movement_check)}</b>` : null,
+    ].filter(Boolean).map(x=>`<span class="chip">${x}</span>`).join('');
+  });
+
+  const tabs = [['process',"What we're showing"],['oldnew','Old → new'],['manage','Management']];
+  const subnav = `<div class="subtabs">${tabs.map(([k,l])=>
+    `<a class="subtab ${tab===k?'on':''}" href="#/flow/${f.id}/${k}">${esc(l)}</a>`).join('')}</div>`;
+
+  let body='';
+  if(tab==='process'){
+    body = `<p class="lead">${esc(f.tab1.lead)}</p>
+    <div class="usefor">${esc(f.use_for)}</div>
+    <div class="mapgrid" style="margin-top:18px">${f.skeleton.map((st,i)=>
+      `<div class="step"><div class="num">${i+1}</div><h3>${esc(st.title)}</h3>
+         <p>${esc(st.plain)}</p></div>`).join('')}</div>
+    <div class="maparrows" style="margin-top:6px">${f.skeleton.map((_,i)=>
+      `<div>${i<f.skeleton.length-1?'':''}</div>`).join('')}</div>`;
+  }
+  if(tab==='oldnew'){
+    body = `<p class="lead">${esc(f.tab2.lead)}</p>` +
+    f.tab2.swaps.map((sw,i)=>`<div class="swaprow">
+      <div class="sn">${i+1}</div>
+      <div class="swapold"><span class="sl">${esc(f.skeleton[i].title)} · old</span>${esc(sw.old)}</div>
+      <div class="arr">→</div>
+      <div class="swapnew"><span class="sl">${esc(f.skeleton[i].title)} · new</span>${esc(sw.new)}<div>
+        ${sw.links.map(x=>`<a class="lnk" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}
+        ${sw.peek?`<a class="lnk" href="${sw.peek.hash}">${esc(sw.peek.label)} →</a>`:''}</div></div>
+    </div>`).join('') +
+    `<div class="handoff">
+      <div class="ours"><span class="sl">Our scope ends here</span>${esc(f.tab2.handoff.ours)}</div>
+      <div class="boundary"><span>scope boundary</span></div>
+      <div class="theirs"><span class="sl">Downstream — unchanged</span>${esc(f.tab2.handoff.theirs)}</div>
+    </div>
+    <div class="handoffnote">${esc(f.tab2.handoff.text)}</div>
+    <a class="nextlink" href="${f.tab2.handoff.next_url}" target="_blank">${esc(f.tab2.handoff.next_label)} →</a>
+    <div class="scopenote">${esc(f.tab2.scope)}</div>`;
+  }
+  if(tab==='manage'){
+    body = `<p class="lead">${esc(f.tab3.lead)}</p>
+    <div class="mgrid">
+      <div class="mcard"><h3>Run control</h3><div id="runctl">Loading…</div>
+        <div class="mbtns">
+          <button class="btn2" onclick="triggerRun('run',this)">Run now</button>
+          <button class="btn2" onclick="triggerRun('inject',this)">Inject bad feed</button>
+          <button class="btn2" onclick="triggerRun('restore',this)">Restore</button></div>
+        <div class="mline" id="trigmsg" style="color:var(--muted)"></div>
+        <div class="mline" style="color:var(--muted);font-size:12px">${esc(f.tab3.run_help)}</div></div>
+      <div class="mcard"><h3>Issues</h3><div id="issues">Loading…</div></div>
+      <div class="mcard"><h3>The overseer</h3>
+        <div class="mline" style="color:var(--muted)">${esc(f.tab3.agent.intro)}
+          <a href="${f.tab3.agent.genie_url}" target="_blank">Open ${esc(f.tab3.agent.genie_title)} ↗</a></div>
+        <div class="askbox"><textarea id="askq" placeholder="Ask about the latest run…"></textarea>
+          <div class="mbtns"><button class="btn2" onclick="askOverseer()">Ask</button></div>
+          ${f.tab3.agent.questions.map(q=>`<span class="askq" onclick="document.getElementById('askq').value=this.textContent;askOverseer()">${esc(q)}</span>`).join('')}
+          <div id="askans"></div></div></div>
+    </div>
+    <details class="beat"><summary>Run this beat — the 10-minute click path</summary>
+      <div class="b-steps">${f.beat.map((b,i)=>
+        `<div class="b-step"><div class="bn">${i+1}</div><div>
+           <div class="bdo">${esc(b.do)}</div>
+           <div class="bex">Expect: ${esc(b.expect)}</div>
+           <div class="bsay">${esc(b.say)}</div></div></div>`).join('')}</div></details>`;
+    setTimeout(loadRunControl, 0);
+  }
+
+  shell('mp', `
+  <div class="crumb"><a href="#/">Overview</a> / ${esc(f.eyebrow)}</div>
+  <div class="eyebrow">${esc(f.eyebrow)}</div>
+  <h1 class="flow-h2">${esc(f.title)}</h1>
+  <div class="chips" id="flowchips" style="margin-top:10px"></div>
+  ${subnav}
+  ${body}
+  <div class="foot">Every link opens the real Databricks asset — the cockpit annotates, it never simulates.
+  New to the terminology? <a href="#/terms">Eight terms, one line each</a>.</div>`);
+}
+
+async function loadRunControl(){
+  let d; try{ d = await (await fetch('api/runcontrol')).json(); }catch(e){ d={}; }
+  const rc=document.getElementById('runctl');
+  if(rc){
+    if(d.job){
+      const l=d.job.last;
+      rc.innerHTML = `<div class="mline">Job: <a href="${d.job.url}" target="_blank">${esc(d.job.name)} ↗</a></div>
+        <div class="mline">${esc(d.job.schedule)}</div>` +
+        (l?`<div class="mline">Last run: <b class="${esc(l.state)}">${esc(l.state)}</b> · ${esc(l.when)} ·
+            <a href="${l.url}" target="_blank">open ↗</a></div>`:'');
+    } else rc.innerHTML = '<div class="mline" style="color:var(--muted)">Run status unavailable.</div>';
+  }
+  const is=document.getElementById('issues');
+  if(is){
+    if(d.gate){
+      let rules={}; try{ rules=JSON.parse(d.gate.rules||'{}'); }catch(e){}
+      const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
+      const max=Math.max(...entries.map(e=>e[1]),1);
+      is.innerHTML = `<div class="mline">Latest gate: <b class="${esc(d.gate.verdict)}">${esc(d.gate.verdict)}</b> · ${esc(d.gate.when)}</div>
+        <div class="mline">In quarantine: <b>${Number(d.gate.quarantined).toLocaleString()}</b> rows ·
+          movement ${esc(d.gate.movement||'—')} · grouping ${esc(d.gate.grouping||'—')}</div>` +
+        (entries.length?entries.map(([k,v])=>`<div class="rulebar"><span class="rname" style="flex-basis:150px">${esc(k)}</span>
+           <span class="bar" style="width:${Math.round(120*v/max)}px"></span>
+           <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join(''):
+          '<div class="mline" style="color:var(--muted)">Nothing in quarantine — the book is clean.</div>') +
+        `<div class="mline" style="color:var(--muted);font-size:12px">${d.gate.verdict==='RED'
+          ?'What to do: review the quarantine reasons, fix or restore the feed, rerun — the file was never touched.'
+          :'What to do: nothing. The gate signed off and the file is released.'}</div>`;
+    } else is.innerHTML = '<div class="mline" style="color:var(--muted)">No gate record yet — run the overnight job.</div>';
+  }
+}
+
+async function triggerRun(action, btn){
+  const labels={run:'the overnight run',inject:'the bad feed injection',restore:'the restore'};
+  if(!confirm(`Start ${labels[action]}?`)) return;
+  const msg=document.getElementById('trigmsg');
+  msg.textContent='Starting…';
+  try{
+    const r = await (await fetch('api/run/trigger',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({action})})).json();
+    msg.innerHTML = r.ok ? `Started — <a href="${r.url}" target="_blank">watch the run ↗</a>` : esc(r.error||'Failed.');
+  }catch(e){ msg.textContent='Failed to start.'; }
+}
+
+async function askOverseer(){
+  const q=document.getElementById('askq').value.trim(); if(!q) return;
+  const out=document.getElementById('askans');
+  out.innerHTML='<div class="askans">The overseer is reading the run record…</div>';
+  try{
+    const r = await (await fetch('api/ask',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})).json();
+    if(r.error){ out.innerHTML=`<div class="askans">${esc(r.error)}</div>`; return; }
+    let html = r.texts.map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join('');
+    if(r.table){
+      html += `<div style="overflow-x:auto"><table class="gtable" style="margin-top:6px">
+        <tr>${r.table.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>
+        ${r.table.rows.map(row=>`<tr>${row.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+    }
+    if(r.sql) html += `<details style="margin-top:6px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">the SQL it ran</summary><pre>${esc(r.sql)}</pre></details>`;
+    out.innerHTML = `<div class="askans">${html||'No answer.'}</div>`;
+  }catch(e){ out.innerHTML='<div class="askans">Could not reach the overseer.</div>'; }
+}
+
+async function governancePage(){
+  if(!GOV){
+    shell('gov', `<div class="eyebrow">Governance</div><h1 class="flow-h2">The record</h1>
+      <p class="sub" style="margin-top:10px">Loading the run record…</p>`);
+    try{ GOV = await (await fetch('api/governance')).json(); }catch(e){ GOV={runs:[],inventory:[],error:'Could not load.'}; }
+    if(location.hash.includes('governance')) governancePage();
+    return;
+  }
+  const g = GOV;
+
+  // 1 · run history
+  let runsHtml;
+  if(g.error){ runsHtml = `<p class="sub" style="margin-top:10px">${esc(g.error)}</p>`; }
+  else if(!g.runs.length){ runsHtml = `<p class="sub" style="margin-top:10px">No runs on record yet — run the overnight job.</p>`; }
+  else{
+    runsHtml = `<table class="gtable"><tr><th>Run</th><th>Verdict</th><th class="num">Landed</th>
+      <th class="num">Quarantined</th><th class="num">Policies → MPs</th><th>Movement</th><th>Grouping</th>
+      <th>Basis in force <span style="text-transform:none;font-weight:600">(approved mortality/lapse/expense set)</span></th><th>Signed off by</th></tr>` +
+      g.runs.map(r=>`<tr>
+        <td>${esc(r.run)}</td>
+        <td><span class="badge ${esc(r.verdict)}">${esc(r.verdict)}</span></td>
+        <td class="num">${Number(r.rows_bronze).toLocaleString()}</td>
+        <td class="num">${Number(r.rows_quarantined).toLocaleString()} (${esc(r.quarantine_pct)}%)</td>
+        <td class="num">${r.policies_in_scope?Number(r.policies_in_scope).toLocaleString()+' → '+Number(r.model_points).toLocaleString():'—'}</td>
+        <td>${r.movement_check && r.movement_check!=='—' ? `<span class="badge ${r.movement_check==='PASS'?'GREEN':(r.movement_check==='BREACH'?'RED':'')}">${esc(r.movement_check)}</span>${r.movement_policies_pct!=null?` <span style="color:var(--muted);font-size:11px">Δpol ${esc(r.movement_policies_pct)}% · ΔSA ${esc(r.movement_sa_pct)}%</span>`:''}` : '—'}</td>
+        <td>${r.grouping_check && r.grouping_check!=='—' ? `<span class="badge ${r.grouping_check==='PASS'?'GREEN':'RED'}">${esc(r.grouping_check)}</span>`:'—'}</td>
+        <td style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(r.assumption_set_id||'—')}</td>
+        <td>${esc(r.signed_off_by)}</td></tr>`).join('') + `</table>` +
+      `<p class="sub" style="margin-top:8px;font-size:12.5px">A RED run carries no sign-off — that's the
+      control working, not a gap. Movement reconciles policy count and sum assured against the last
+      good run; Grouping proves control totals survive the policies→model-points compression.</p>`;
+  }
+
+  // 2 · why it went RED — latest run with rejects
+  let rulesHtml = `<p class="sub" style="margin-top:10px">No rejects on the current record — inject the bad feed to see this populate.</p>`;
+  const withRejects = (g.runs||[]).find(r=>Number(r.rows_quarantined)>0 && r.rule_breakdown);
+  if(withRejects){
+    let rules={}; try{ rules=JSON.parse(withRejects.rule_breakdown); }catch(e){}
+    const entries=Object.entries(rules).sort((a,b)=>b[1]-a[1]);
+    const max=Math.max(...entries.map(e=>e[1]),1);
+    rulesHtml = `<p class="sub" style="margin:10px 0 4px">Run of ${esc(withRejects.run)} —
+      ${Number(withRejects.rows_quarantined).toLocaleString()} rows rejected, by rule:</p>` +
+      entries.map(([k,v])=>`<div class="rulebar"><span class="rname">${esc(k)}</span>
+        <span class="bar" style="width:${Math.round(260*v/max)}px"></span>
+        <span class="cnt">${Number(v).toLocaleString()}</span></div>`).join('');
+  }
+
+  // 3 · what we record and why
+  const inv = `<table class="gtable"><tr><th>What's recorded</th><th>Where</th><th>Why it matters</th></tr>` +
+    g.inventory.map(i=>`<tr><td style="font-weight:600">${esc(i.what)}</td>
+      <td><a href="${i.where.url}" target="_blank" style="font-family:ui-monospace,monospace;font-size:11.5px">${esc(i.where.label)} ↗</a></td>
+      <td style="color:var(--muted)">${esc(i.why)}</td></tr>`).join('') + `</table>`;
+
+  shell('gov', `
+  <div class="crumb"><a href="#/governance">Governance</a> / sign-off gates</div>
+  <div class="eyebrow">Governance · sign-off gates<span class="ntag live">live</span></div>
+  <h1 class="flow-h2">The record</h1>
+  <p class="story">Nothing on this page was written for audit — it's the by-product of running the
+  process. Three questions an auditor or a head of function asks, answered straight from the tables.</p>
+
+  <div class="section" style="margin-top:22px"><span class="eyebrow">1 · What ran, and was it clean?</span></div>
+  ${runsHtml}
+
+  <div class="section" style="margin-top:26px"><span class="eyebrow">2 · When it went RED — why, exactly?</span></div>
+  ${rulesHtml}
+
+  <div class="section" style="margin-top:26px"><span class="eyebrow">3 · What we record, and why</span></div>
+  ${inv}
+
+  <div class="scopenote">${esc(g.scope)}</div>
+  <div class="foot">Read-only, pulled live from <b>${esc(DATA?DATA.catalog:'')}.lifecast</b> —
+  the same tables an auditor would query directly.</div>`);
+}
+
+function termsPage(){
+  shell('terms', `
+  <div class="crumb"><a href="#/">Overview</a> / terms</div>
+  <div class="eyebrow">Before you present</div>
+  <h1 class="flow-h2">Eight terms, one line each</h1>
+  <p class="story">Enough to survive the first follow-up question. The full learn-this-process
+  module is coming; until then, these are the words that matter.</p>
+  ${DATA.terms.map(t=>`<div class="termrow"><b>${esc(t.term)}</b><span>${esc(t.text)}</span></div>`).join('')}
+  <div class="foot">Client-safe — nothing here you couldn't say with the prospect in the room.</div>`);
+}
+
+function personaPage(pid){
+  const p = DATA.personas.find(x=>x.id===pid); if(!p) return landing();
+  const items = p.cards.map(c=>
+    `<div class="card qitem" onclick="location.hash='#/p/${p.id}/${c.id}'">
+       <h2>${esc(c.question)}</h2><span class="arr">→</span></div>`).join('');
+  shell('personas', `<div class="crumb"><a href="#/personas">Personas</a> / ${esc(p.title)}</div>
+    <div class="eyebrow">Persona</div><h1>${esc(p.title)}</h1>
+    <p class="sub">${esc(p.blurb)}</p>
+    <div class="grid">${items}</div>`);
+}
+
+function cardPage(pid, cid){
+  const p = DATA.personas.find(x=>x.id===pid); if(!p) return landing();
+  const c = p.cards.find(x=>x.id===cid); if(!c) return personaPage(pid);
+  shell('personas', `<div class="crumb"><a href="#/personas">Personas</a> / <a href="#/p/${p.id}">${esc(p.title)}</a> / card</div>
+  <div class="card" style="margin-top:20px">
+    <h2>“${esc(c.question)}”</h2>
+    <div class="section"><span class="eyebrow">Proves</span><div class="proves">${esc(c.proves)}</div></div>
+    <div class="section"><span class="eyebrow">Where it lives</span>
+      <ul class="where body">${c.where.map(x=>`<li><a href="${x.url}" target="_blank">${esc(x.label)} ↗</a></li>`).join('')}</ul></div>
+    <div class="section"><span class="eyebrow">Build &amp; control</span><div class="body">${esc(c.build)}</div></div>
+    <div class="section"><span class="eyebrow">Go</span>
+      <div class="gobtns">${c.links.map(x=>`<a class="btn" href="${x.url}" target="_blank">${esc(x.label)} ↗</a>`).join('')}</div></div>
+    <div class="section"><span class="eyebrow">Today → tomorrow</span>
+      <div class="tt"><div class="t today"><span class="tag">Today</span>${esc(c.today)}</div>
+      <div class="t tomorrow"><span class="tag">Tomorrow</span>${esc(c.tomorrow)}</div></div></div>
+  </div>`);
+}
+
+function blockPage(key){
+  if(key==='roadmap'){
+    const r = DATA.roadmap;
+    shell('roadmap', `
+    <div class="crumb"><a href="#/">Overview</a> / roadmap</div>
+    <div class="eyebrow">Wider solution<span class="ntag roadmap">roadmap</span></div>
+    <h1 class="flow-h2">${esc(r.title)}</h1>
+    <p class="lead">${esc(r.will_show)}</p>
+    ${r.groups.map(([g,items])=>`
+      <div class="section" style="margin-top:20px"><span class="eyebrow">${esc(g)}</span></div>
+      <div class="phgrid">${items.map(i=>`<div class="phcard"><p>${esc(i)}</p>
+        <span class="ntag roadmap" style="margin-left:0;margin-top:6px;display:inline-block">connects here · roadmap</span></div>`).join('')}</div>`).join('')}
+    <div class="foot">Every connection point is stated, not simulated — it gets built when the
+    conversation asks for it.</div>`);
+    return;
+  }
+  const b = DATA.blocks[key]; if(!b) return landing();
+  shell(key, `
+  <div class="crumb"><a href="#/">Overview</a> / ${esc(b.title)}</div>
+  <div class="eyebrow">${esc(b.section)}<span class="ntag ${esc(b.state)}">${esc(b.state)} · placeholder</span></div>
+  <h1 class="flow-h2">${esc(b.title)}</h1>
+  <p class="lead">${esc(b.will_show)}</p>
+  <div class="section" style="margin-top:20px"><span class="eyebrow">The beat, when it lands — same three tabs</span></div>
+  <div class="phgrid">
+    ${b.tabs.map((t,i)=>`<div class="phcard"><span class="tlbl">${i+1} · ${esc(t[0])}</span>
+      <p>${esc(t[1])}</p></div>`).join('')}
+  </div>
+  <div class="scopenote">${esc(b.posture)}</div>
+  ${b.agents.length?`<div class="section" style="margin-top:18px"><span class="eyebrow">Agents — in this beat's management tab</span></div>`+
+    b.agents.map(a=>`<div class="agentrow">${esc(a[0])}<span class="ntag ${esc(a[1])}" style="margin-left:auto">${esc(a[1])}</span></div>`).join(''):''}
+  <div class="section" style="margin-top:18px"><span class="eyebrow">Already live underneath</span>
+    <div class="body">${b.assets.map(a=>`<a href="${a.url}" target="_blank" style="display:block;margin-top:5px;font-weight:600;font-size:13px">${esc(a.label)} ↗</a>`).join('')}</div></div>
+  <div class="foot">An openly-marked placeholder — it states intent, it never fake-works. The
+  workspace assets behind it are real and running today.</div>`);
+}
+
+function governanceShowcase(){
+  shell('gov', `
+  <div class="crumb"><a href="#/">Overview</a> / governance</div>
+  <div class="eyebrow">Cross-cutting<span class="ntag coming">mostly placeholder</span></div>
+  <h1 class="flow-h2">Governance — the one-place view</h1>
+  <p class="lead">The lead seller, aggregated. Each piece also appears inside its beat's management
+  tab — this block is where it all rolls up.</p>
+  <div class="phgrid" style="margin-top:18px">
+    ${DATA.gov_showcase.map(c=> c.state==='live'
+      ? `<a class="pblock c-green" href="${c.route}"><h3>${esc(c.title)}<span class="ntag live">live</span></h3>
+         <p>${esc(c.text)}</p><div class="go">Open the record →</div></a>`
+      : `<div class="phcard"><span class="tlbl">${esc(c.title)}</span><p>${esc(c.text)}</p>
+         <span class="ntag coming" style="margin-left:0;margin-top:6px;display:inline-block">coming</span></div>`).join('')}
+  </div>
+  <div class="section" style="margin-top:18px"><span class="eyebrow">Agent — in this block</span></div>
+  <div class="agentrow">${esc(DATA.gov_agent[0])}<span class="ntag placeholder" style="margin-left:auto">${esc(DATA.gov_agent[1])}</span></div>
+  <div class="foot">Live pieces open the real record; stubs state intent and never fake-work.</div>`);
+}
+
+function pocPage(){
+  const p = DATA.poc;
+  shell('poc', `
+  <div class="crumb"><a href="#/">Overview</a> / POC plan</div>
+  <div class="eyebrow">Brief §12.3 · narrowed to one product</div>
+  <h1 class="flow-h2">${esc(p.title)}</h1>
+  <p class="lead">${esc(p.lead)}</p>
+  <div class="section" style="margin-top:22px"><span class="eyebrow">Objective</span>
+    <div class="body" style="max-width:780px">${esc(p.objective)}</div></div>
+  <div class="scopenote">${esc(p.scope_out)}</div>
+  <div class="section" style="margin-top:24px"><span class="eyebrow">Reused vs swapped</span></div>
+  <table class="gtable"><tr><th>The scaffold — reused as-is</th><th>Yours — swapped in</th></tr>
+    ${p.reuse.map(([a,b])=>`<tr><td>${esc(a)}</td><td style="font-weight:600">${esc(b)}</td></tr>`).join('')}</table>
+  <div class="section" style="margin-top:24px"><span class="eyebrow">Week by week</span></div>
+  ${p.weeks.map((w,i)=>`<div class="b-step" style="background:var(--card);border:1px solid var(--line);
+     border-radius:12px;padding:12px 16px;margin-top:10px;border-top:1px solid var(--line)">
+     <div class="bn">${i+1}</div><div><div class="bdo">${esc(w[0])}</div>
+     <div class="bex" style="margin-top:3px">${esc(w[1])}</div></div></div>`).join('')}
+  <div class="section" style="margin-top:24px"><span class="eyebrow">Exit criteria — measurable, agreed in week 1</span></div>
+  <table class="gtable"><tr><th style="width:30px">#</th><th>Criterion</th><th>Target</th></tr>
+    ${p.exit.map(([c,t],i)=>`<tr><td>${i+1}</td><td style="font-weight:600">${esc(c)}</td><td>${esc(t)}</td></tr>`).join('')}</table>
+  <div class="section" style="margin-top:24px"><span class="eyebrow">The decision at exit</span>
+    <div class="body" style="max-width:780px">${esc(p.decision)}</div></div>
+  <div class="section" style="margin-top:20px"><span class="eyebrow">What we need from you</span>
+    <ul class="where body">${p.needs.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>
+  <div class="foot">The evidence pack is a by-product of running — tie-out records, run history with
+  basis and code version, gate history, approval trails, lineage. Nothing is assembled by hand.
+  Ships with the repo as POC_TERM_PRODUCT.md.</div>`);
+}
+
 function route(){
   if(!DATA) return;
   const h = location.hash.replace(/^#\/?/,'');
