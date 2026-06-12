@@ -121,6 +121,90 @@ FLOWS = [
 },
 ]
 
+# ── Blocks (APP_STRUCTURE_SPEC.md §4): left-nav = blocks only. Every block
+# except model points is an OPENLY-STUBBED placeholder — states intent, never
+# fake-works. Underlying workspace assets are live and linked. ───────────────
+BLOCKS = {
+ "assumptions": {
+  "title": "Assumptions", "section": "Inputs", "state": "next",
+  "will_show": "Setting the basis — mortality, lapse and expense — governed: versioned, approved, and still entered in Excel.",
+  "tabs": [
+   ("What we're showing", "Setting mortality, lapse and expense — the basis every valuation uses."),
+   ("Old → new", "Excel workbooks one person owns → governed Delta tables, with the Excel round-trip kept for entry and review."),
+   ("Management", "Versioning, sign-off, and the experience agent."),
+  ],
+  "posture": "Bring yours — or we show how to derive them.",
+  "assets": [("Assumption governance assets — live in the workspace", "folder:02_assumption_governance")],
+  "agents": [("Experience — actual-vs-expected summary, proposes an assumption adjustment", "placeholder")],
+ },
+ "scenarios": {
+  "title": "Scenarios (ESG)", "section": "Inputs", "state": "planned",
+  "will_show": "Economic scenarios governed like everything else — your provider's sets versioned and gated, or an illustrative set generated in-platform.",
+  "tabs": [
+   ("What we're showing", "Economic scenarios for market-consistent runs."),
+   ("Old → new", "Provider file on a share → governed in Delta — or generated in-platform with QuantLib (the package, shown openly)."),
+   ("Management", "Calibration tracked and versioned; every set's provenance on the record."),
+  ],
+  "posture": "Your ESG stays yours — we are runtime and governance.",
+  "assets": [("Scenario management assets — live in the workspace", "folder:04_scenario_management")],
+  "agents": [],
+ },
+ "modelling": {
+  "title": "Modelling", "section": "Modelling & results", "state": "planned",
+  "will_show": "The projection itself — the content move: policies + assumptions → cashflows → reserve, in Python on the platform, validated side by side against the engine.",
+  "tabs": [
+   ("What we're showing", "Policies + assumptions → cashflows → reserve."),
+   ("Old → new", "Engine content → Python on the platform, validated side by side per model point."),
+   ("Management", "Run overseer + reconciliation agents, MLflow run history, validate-to-tolerance gates."),
+  ],
+  "posture": "Low-hanging fruit: the deterministic term projection. Stochastic is roadmap — the hard last mile, said openly.",
+  "assets": [("Projection migration assets — live in the workspace", "folder:05_projection_migration"),
+             ("Stochastic fan-out assets — live in the workspace", "folder:06_stochastic_boundaries")],
+  "agents": [("Run overseer — did it complete, anything quarantined, safe to release?", "specced"),
+             ("Reconciliation — explains where the two engines differ, and why", "placeholder")],
+ },
+ "results": {
+  "title": "Results", "section": "Modelling & results", "state": "planned",
+  "will_show": "Fulfilment cash flows and IFRS 17 outputs — one governed results layer instead of a CSV dump and a hand-built board pack.",
+  "tabs": [
+   ("What we're showing", "Fulfilment cash flows = PV of future cash flows + risk adjustment, by IFRS 17 group; feeds the CSM engine downstream."),
+   ("Old → new", "CSV dump + Excel board pack → Delta + AI/BI dashboards + Genie."),
+   ("Management", "Movement & disclosure agent, actual vs expected, movement analysis."),
+  ],
+  "posture": "The CFO export is always offered; regulatory templates stay in Excel.",
+  "assets": [("Results & Genie assets — live in the workspace", "folder:03_results_and_genie")],
+  "agents": [("Movement & disclosure — IFRS 17 movement attribution, drafts commentary", "placeholder")],
+ },
+}
+
+# Governance block — the cross-cutting showcase (one live view, four stubs).
+GOV_SHOWCASE = [
+ {"title": "Sign-off gates", "state": "live",
+  "text": "Assumption sign-off and run-release — every run's verdict, control totals and approver on the record.",
+  "route": "#/governance/record"},
+ {"title": "Trace this number", "state": "coming",
+  "text": "Lineage policy → assumption → cashflow → FCF: pick a number, walk back to everything that fed it."},
+ {"title": "Version & reproduce", "state": "coming",
+  "text": "Reproduce a historical valuation exactly — same data, same basis, same code version, same number."},
+ {"title": "Model risk register", "state": "coming",
+  "text": "Validation status, owner, and the reconciliation-to-engine result, per model."},
+ {"title": "Roles & segregation of duties", "state": "coming",
+  "text": "Preparer / reviewer / approver — who may enter, who may approve, who may release."},
+]
+GOV_AGENT = ("Audit & documentation — drafts model docs, the sign-off note, and answers 'what fed this number'", "placeholder")
+
+ROADMAP = {
+ "title": "Roadmap / wider solution", "state": "roadmap",
+ "will_show": "Where this plugs into the business process — every connection point marked openly as roadmap.",
+ "groups": [
+  ("Downstream", ["→ IFRS 17 CSM engine / sub-ledger", "→ capital (SCR)", "→ general ledger",
+                  "→ reporting & disclosures", "→ ALM / treasury"]),
+  ("Upstream", ["← policy admin", "← finance data"]),
+  ("The loop", ["experience analysis → back into assumptions"]),
+  ("The suite", ["sibling Bricksurance workbenches — pricing, claims"]),
+ ],
+}
+
 # ── POC plan (brief §12.3, narrowed to one term product). Canonical copy also
 # ships as POC_TERM_PRODUCT.md in the repo. ──────────────────────────────────
 POC_PLAN = {

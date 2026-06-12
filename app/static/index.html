@@ -195,6 +195,25 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .askq{display:block;font-size:12px;font-weight:600;color:var(--v);cursor:pointer;margin-top:5px}
 .askans{margin-top:12px;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .askans pre{font-size:11px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:8px}
+/* placeholders + state tags */
+.ntag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+      border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:2px}
+.ntag.live{background:var(--green-bg);color:var(--green)}
+.ntag.next{background:var(--v50);color:var(--v)}
+.ntag.planned,.ntag.coming,.ntag.roadmap,.ntag.placeholder{background:var(--amber-bg);color:var(--amber)}
+.ntag.specced{background:var(--v50);color:var(--v)}
+.nav a.ph{opacity:.62}
+.nav a .mini{margin-left:auto;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+             color:#8a93a6;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:1px 7px}
+.nav a .mini.live{color:#7ee2a8;border-color:rgba(126,226,168,.35)}
+.sidefoot a{color:#8a93a6;font-weight:600}
+.sidefoot a:hover{color:#fff}
+.phcard{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;opacity:.85}
+.phcard .tlbl{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.phcard p{font-size:13px;margin-top:4px;color:var(--ink)}
+.phgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+.agentrow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+          border-radius:10px;padding:10px 14px;margin-top:8px;font-size:12.5px}
 /* destination tab */
 .ghosts{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .ghost{border:2px dashed #ecd9a8;background:#fffdf5;border-radius:10px;padding:8px 14px;color:var(--muted);
@@ -272,23 +291,22 @@ function shell(active, html){
     <div class="brand"><div class="dot">L</div>
       <div><b>LifeCast</b><span>Bricksurance Life</span></div></div>
     <nav class="nav">
-      <div class="sec">The process</div>
-      <a href="#/" class="${active==='map'?'on':''}">Process map</a>
-      <div class="sec">Flows</div>
-      ${flowItem(0,'mp','Model points')}
-      ${flowItem(1,'asm','Assumptions')}
-      ${flowItem(2,'res','Results & analytics')}
-      ${flowItem(3,'esg','Scenarios')}
-      ${flowItem(4,'proj','Projection')}
-      ${flowItem(5,'stoch','Stochastic')}
-      <div class="sec">Reference</div>
+      <a href="#/" class="${active==='map'?'on':''}">Overview</a>
+      <div class="sec">Inputs</div>
+      <a href="#/flow/model-point-feed" class="${active==='mp'?'on':''}">Model points<span class="mini live">live</span></a>
+      <a href="#/block/assumptions" class="ph ${active==='assumptions'?'on':''}">Assumptions<span class="mini">next</span></a>
+      <a href="#/block/scenarios" class="ph ${active==='scenarios'?'on':''}">Scenarios (ESG)<span class="mini">planned</span></a>
+      <div class="sec">Modelling & results</div>
+      <a href="#/block/modelling" class="ph ${active==='modelling'?'on':''}">Modelling<span class="mini">planned</span></a>
+      <a href="#/block/results" class="ph ${active==='results'?'on':''}">Results<span class="mini">planned</span></a>
+      <div class="sec">Cross-cutting</div>
       <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
-      <a href="#/poc" class="${active==='poc'?'on':''}">POC plan</a>
-      <a href="#/personas" class="${active==='personas'?'on':''}">Personas</a>
-      <a href="#/terms" class="${active==='terms'?'on':''}">Terms</a>
+      <a href="#/block/roadmap" class="ph ${active==='roadmap'?'on':''}">Roadmap<span class="mini">roadmap</span></a>
     </nav>
-    <div class="sidefoot">About this demo — Bricksurance Life is fictional; every figure is
-    synthetic and illustrative. No client data, no actuarial methodology.</div>
+    <div class="sidefoot" style="padding-bottom:8px">
+      <a href="#/terms">Terms</a> · <a href="#/personas">Personas</a> · <a href="#/poc">POC plan</a></div>
+    <div class="sidefoot" style="border-top:none;padding-top:4px">About this demo — Bricksurance Life
+    is fictional; every figure is synthetic and illustrative. No client data, no actuarial methodology.</div>
   </aside>
   <div class="main"><div class="wrap">${html}</div></div></div>`;
 }
@@ -325,27 +343,27 @@ function landing(maptab){
           <p>Every policy, landed and gated — no summarising, no grouping. The same governed
           ingestion you saw, minus the compression.</p>
           <div class="go">The data journey →</div></a>
-        <a class="pblock c-blue" href="${t[1].url}" target="_blank"><h3>Assumptions — the basis</h3>
+        <a class="pblock c-blue" href="#/block/assumptions"><h3>Assumptions — the basis</h3>
           <p>The same versioned, approved basis — unchanged in the destination.</p>
-          <div class="go">Open the assets ↗</div></a>
-        <a class="pblock c-blue" href="${t[3].url}" target="_blank"><h3>Economic scenarios</h3>
+          <div class="go">Open the block →</div></a>
+        <a class="pblock c-blue" href="#/block/scenarios"><h3>Economic scenarios</h3>
           <p>The same governed scenario sets — unchanged in the destination.</p>
-          <div class="go">Open the assets ↗</div></a></div>
+          <div class="go">Open the block →</div></a></div>
       <div class="pmaparr">→</div>
       <div class="pcol"><div class="collbl">Projection</div>
-        <a class="pblock primary c-blue" href="${t[4].url}" target="_blank"><h3>Projection — native, in parallel</h3>
+        <a class="pblock primary c-blue" href="#/block/modelling"><h3>Projection — native, in parallel</h3>
           <p>Every policy on its own terms (seriatim), in Python on the platform. Runtime is a
           sizing choice, not a wall.</p>
-          <div class="go">The proof — same product in Python ↗</div></a>
+          <div class="go">Open the block →</div></a>
         <div class="ghosts">
           <div class="ghost"><b>Grouping step</b><span>gone</span></div>
           <div class="ghost"><b>Licensed engine</b><span>gone</span></div></div></div>
       <div class="pmaparr">→</div>
       <div class="pcol"><div class="collbl">Results</div>
-        <a class="pblock c-green" href="${t[2].url}" target="_blank"><h3>Results & analytics</h3>
+        <a class="pblock c-green" href="#/block/results"><h3>Results & analytics</h3>
           <p>One results layer — dashboard, Genie, the export. "Prove what fed this number"
           answered end to end.</p>
-          <div class="go">Open the assets ↗</div></a>
+          <div class="go">Open the block →</div></a>
         <a class="pblock c-green" href="#/governance"><h3>Governance & audit</h3>
           <p>One lineage, fully reproducible — data, assumptions, scenarios, projection, results.</p>
           <div class="go">Open the record →</div></a></div>
@@ -392,8 +410,12 @@ function landing(maptab){
 
   <div class="pmap">
     <div class="pcol"><div class="collbl">Inputs — what feeds the engine</div>
-      ${block(t[0], 'Policy data → model point file', 'Raw policy records grouped into the summarised file the engine reads — gated, reconciled, lineage end to end.', true, 'c-blue')}
-      ${block(t[1], 'Assumptions — the basis', 'Mortality, lapse and expense tables: versioned, approved, audit-trailed. Excel entry kept.', false, 'c-blue')}
+      <a class="pblock c-blue primary" href="#/flow/model-point-feed"><h3>Policy data → model point file<span class="ntag live">live</span></h3>
+       <p>Raw policy records grouped into the summarised file the engine reads — gated, reconciled, lineage end to end.</p>
+       <div class="go">Open the beat →</div></a>
+      <a class="pblock c-blue" href="#/block/assumptions"><h3>Assumptions — the basis<span class="ntag next">next</span></h3>
+       <p>Mortality, lapse and expense tables: versioned, approved, audit-trailed. Excel entry kept.</p>
+       <div class="go">Open the block →</div></a>
       ${block(t[3], 'Economic scenarios', 'Your scenario provider\'s sets, versioned and gated — plus an illustrative generated set.')}
     </div>
     <div class="pmaparr">→</div>
@@ -403,18 +425,18 @@ function landing(maptab){
         <p>Your licensed modelling engine. It reads the same files it reads today.
         Nothing we build moves it — that's the no-risk transition.</p></div>
       <div class="beside"><div class="collbl">Beside the engine — the migration path</div>
-        <a href="${t[4].url}" target="_blank"><b>Same product in Python ↗</b>
-          <span>The engine's own calculation, run on the platform and tied out per model
-          point — trust earned run by run.</span></a>
-        <a href="${t[5].url}" target="_blank"><b>Stochastic fan-out ↗</b>
-          <span>The runs the overnight window can't fit — 1,000 futures valued in parallel.</span></a>
+        <a href="#/block/modelling"><b>Modelling — the content move<span class="ntag planned">planned</span></b>
+          <span>The engine's own calculation in Python, tied out per model point — trust earned
+          run by run. Stochastic fan-out for the runs the overnight window can't fit.</span></a>
         <p style="font-size:11.5px;color:var(--muted);margin-top:8px">Product by product, at your
         pace. Whether a tied-out product ever moves is your decision — the engine keeps running
         either way. <a href="#/destination">Where does it land? →</a></p></div>
     </div>
     <div class="pmaparr">→</div>
     <div class="pcol"><div class="collbl">Outputs & analytics</div>
-      ${block(t[2], 'Results & analytics', 'Engine output lands in Delta once; the BEL dashboard and Genie answer in English. The export is always offered.', false, 'c-green')}
+      <a class="pblock c-green" href="#/block/results"><h3>Results & analytics<span class="ntag planned">planned</span></h3>
+       <p>Engine output lands in Delta once; the BEL dashboard and Genie answer in English. The export is always offered.</p>
+       <div class="go">Open the block →</div></a>
       <a class="pblock c-green" href="#/governance"><h3>Governance & audit</h3>
         <p>Every run, every basis, every sign-off — on the record. The regulator's question is a query.</p>
         <div class="go">Open the record →</div></a>
@@ -485,7 +507,9 @@ function route(){
   if(parts[0]==='personas') return personasPage();
   if(parts[0]==='terms') return termsPage();
   if(parts[0]==='file' && parts[1]) return filePage(parts[1]);
-  if(parts[0]==='governance') return governancePage();
+  if(parts[0]==='governance' && parts[1]==='record') return governancePage();
+  if(parts[0]==='governance') return governanceShowcase();
+  if(parts[0]==='block' && parts[1]) return blockPage(parts[1]);
   if(parts[0]==='flow' && parts[1]) return flowPage(parts[1], parts[2]);
   if(parts[0]==='p' && parts[2]) return cardPage(parts[1], parts[2]);
   if(parts[0]==='p' && parts[1]) return personaPage(parts[1]);
