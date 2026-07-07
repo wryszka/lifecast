@@ -2,9 +2,12 @@
 # MAGIC %md
 # MAGIC # LifeCast — Phase 4: scenario ingest (the consume pattern)
 # MAGIC
-# MAGIC **Pattern (a) — consume your scenario provider.** A delivered scenario file is
-# MAGIC landed into Delta, validated, **versioned in UC** and activated — zero friction
-# MAGIC for firms with a licensed ESG. Mirrors the assumption-governance pattern:
+# MAGIC **Pattern (a) — consume your scenario provider.** The `esg/inbound` folder is
+# MAGIC the plug point: whichever licensed ESG you run today — any of the market-standard
+# MAGIC vendors — delivers here unchanged, and everything downstream is identical. The
+# MAGIC delivered file is landed into Delta, validated, **versioned in UC** and activated
+# MAGIC — zero friction for firms with a licensed generator. Mirrors the
+# MAGIC assumption-governance pattern:
 # MAGIC
 # MAGIC - `esg_scenario_sets` — registry: one row per set, versioned, ACTIVE/AVAILABLE/SUPERSEDED
 # MAGIC - `esg_scenarios` — the paths, keyed by `scenario_set_id`

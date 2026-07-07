@@ -1,34 +1,37 @@
 # 03 — Results, AI/BI & Genie (use case 3 — end of Track 1)
 
 **The story:** *"I ask 'show me BEL movement vs last quarter by product line' and
-get an answer — instead of rebuilding a pivot table."* The liability model's
-quarterly CSV dumps land in Delta once, governed; AI/BI and Genie replace the
-downstream Excel reporting stack. The CFO export is **always offered** — and the
-QRT/XBRL templates stay in Excel. End of this use case = Track 1 complete,
-**zero actuarial maths written**.
+get an answer — instead of rebuilding a pivot table."* The engine runs, dumps its
+CSVs (because that is what engines do), and the dumps land in Delta once,
+governed. AI/BI and Genie replace the downstream Excel stack; the CFO export is
+**always offered**; QRT/XBRL templates stay in Excel.
 
-**Drive it with job `lifecast_results_run`:** results pipeline refresh → CFO
-export → dashboard publish → Genie space.
+**The coherent chain:** TERM_LEVEL results come from the *real* governed path —
+policy → model point file → the (mock) engine → results — so the dashboard
+number reconciles to the tie-out, to the model points, to the policies. The
+other two product lines are still "legacy-fed" (synthesised), exactly how a
+partially-migrated estate looks.
+
+**Drive it with `lifecast_quarter_close`** — the whole close as one workflow:
+overnight run → engine run → results run. Or piecewise: `lifecast_engine_run`,
+then `lifecast_results_run`.
 
 | # | Asset | What it does |
 |---|---|---|
-| 00 | `00_prophet_results_mock` | The today-state: six quarters of synthetic liability-model results dumped as CSVs onto the volume (`prophet/results/`). Whole-estate scope (3 product lines × 8 cohorts) — wider than the term feed of use case 01, on purpose. Run by the foundation job. |
-| 01 | `01_results_pipeline.py` | **Source of pipeline `lifecast_results_pipeline`** (don't run as a notebook): `brz_prophet_results` → `slv_projection_results` (typed + checked) → `gld_results_by_product` + `gld_bel_movement`. |
+| 00 | `00_engine_run` | **The mock engine, orchestrated** (job `lifecast_engine_run`): picks up the exported MPF, reads the approved basis + EIOPA curve, values the term book per model point — base **and ±100bp sensitivity runs** — synthesises the two legacy-fed lines, dumps estate CSVs to `prophet/results/` + per-MP detail to `prophet/results_detail/`. |
+| 01 | `01_results_pipeline.py` | **Source of pipeline `lifecast_results_pipeline`**: summary dumps → `brz_prophet_results` → `slv_projection_results` (typed, checked, **latest engine run wins** — engines re-run quarters) → `gld_results_by_product` + `gld_bel_movement`; detail dumps → `brz_engine_mp_results` → `slv_engine_mp_results`. |
 | 02 | `02_cfo_export` | The board pack as Excel + CSV to `export/board_pack/` on every run. Connect, don't replace. |
-| 03 | `03_create_dashboard` | Creates/updates the **`LifeCast — BEL Movement`** Lakeview dashboard in this folder (warehouse resolved at runtime, idempotent). |
-| 04 | `04_create_genie_space` | Creates the **`LifeCast — Results`** Genie space over the results layer + assumption registry (create-if-missing). |
+| 03 | `03_create_dashboard` | Creates/updates the **`LifeCast — BEL Movement`** dashboard (idempotent, runtime warehouse). |
+| 04 | `04_create_genie_space` | Creates the **`LifeCast — Results`** Genie space over the results + analytics layer (create-if-missing). |
+| 05 | `05_bel_analytics` | **The analytics case:** the rate-risk map (BEL sensitivity by attained age × outstanding term, from the engine's own ±100bp runs), concentration (top cells + cumulative share), and movement drilled to cohort level → `gld_bel_sensitivity`, `gld_bel_concentration`, `gld_movement_by_cohort`. Ran in seconds on results you already had — that's the point. |
 
-**Where to look while presenting:** the dashboard (counters + trend + movement),
-then Genie — ask *"Which product line drove the BEL increase in the latest
-quarter?"* (the data carries a deliberate GROUP_PROTECTION jump), then
-*"Which assumption basis is currently approved and who approved it?"* to tie
-back to use case 02. Lineage on `gld_bel_movement` runs all the way from the CSV dump.
+**Where to look while presenting:** the quarter-close workflow graph (the whole
+close, orchestrated), the dashboard, then Genie — *"which product line drove the
+BEL increase?"* (GROUP_PROTECTION, the planted jump), *"where is my rate risk
+concentrated?"* (the sensitivity table), and *"which assumption basis is
+currently approved?"* to tie back to use case 02.
 
-**Questions to seed in the Genie UI** (the create API doesn't take them):
-BEL movement vs last quarter by product line · which product drove the latest
-increase · total BEL trend · cohort contribution to GROUP_PROTECTION ·
-currently approved basis and approver.
-
-**Today → tomorrow:** today, the model dumps CSVs and the board pack is rebuilt
-in Excel each quarter. Tomorrow, outputs land in Delta; AI/BI + Genie answer
-instantly; the CFO export is one click and always current.
+**Today → tomorrow:** today, the engine dumps CSVs and the board pack is rebuilt
+in Excel each quarter; a sensitivity question waits for next quarter's batch.
+Tomorrow, the dumps land governed, the dashboard and Genie answer instantly, and
+the ±100bp runs are already on the shelf.

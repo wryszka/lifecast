@@ -27,6 +27,9 @@ TITLE = "LifeCast — Results"
 TABLES = sorted([
     f"{CATALOG}.{SCHEMA}.gld_results_by_product",
     f"{CATALOG}.{SCHEMA}.gld_bel_movement",
+    f"{CATALOG}.{SCHEMA}.gld_movement_by_cohort",
+    f"{CATALOG}.{SCHEMA}.gld_bel_sensitivity",
+    f"{CATALOG}.{SCHEMA}.gld_bel_concentration",
     f"{CATALOG}.{SCHEMA}.slv_projection_results",
     f"{CATALOG}.{SCHEMA}.asm_assumption_sets",
 ])
@@ -34,7 +37,8 @@ TABLES = sorted([
 DESCRIPTION = (
     "Ask questions about Bricksurance Life liability results: best estimate liability (BEL) "
     "by product line and quarter, quarter-on-quarter BEL movement and what drove it, "
-    "PV of premiums/claims/expenses, cohort-level drill-down, and which governed assumption "
+    "PV of premiums/claims/expenses, cohort-level drill-down, where rate risk and "
+    "concentration sit (from the engine's ±100bp runs), and which governed assumption "
     "basis was approved when. Synthetic demo data — Bricksurance Life is fictional."
 )
 

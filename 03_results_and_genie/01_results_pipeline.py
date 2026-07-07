@@ -53,11 +53,11 @@ def brz_prophet_results():
 
 @dlt.table(
     name="slv_projection_results",
-    comment="Typed, quality-checked projection results — one row per run x product x cohort.",
+    comment="Typed, quality-checked projection results — one row per product x cohort x quarter, latest engine run wins (engines re-run quarters; superseded runs are dropped here, never silently mixed).",
 )
 @dlt.expect_all_or_drop(RESULT_RULES)
 def slv_projection_results():
-    return spark.read.table("brz_prophet_results").select(
+    typed = spark.read.table("brz_prophet_results").select(
         "run_id",
         F.expr("try_cast(run_date AS DATE)").alias("run_date"),
         "reporting_period",
@@ -73,6 +73,57 @@ def slv_projection_results():
         "_source_file",
         "_ingested_at",
     )
+    latest = Window.partitionBy("reporting_period", "product_line", "cohort_year").orderBy(
+        F.col("_ingested_at").desc(), F.col("run_id").desc())
+    return (typed.withColumn("_rn", F.row_number().over(latest))
+            .filter("_rn = 1").drop("_rn"))
+
+
+@dlt.table(
+    name="brz_engine_mp_results",
+    comment="As-landed per-model-point engine output (base valuation + the ±100bp sensitivity runs) — Auto Loader over prophet/results_detail.",
+)
+def brz_engine_mp_results():
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("header", "true")
+        .load(f"{VOLUME_ROOT}/prophet/results_detail")
+        .select("*",
+                F.col("_metadata.file_path").alias("_source_file"),
+                F.current_timestamp().alias("_ingested_at"))
+    )
+
+
+@dlt.table(
+    name="slv_engine_mp_results",
+    comment="Typed per-model-point engine results, latest run per valuation date — the drill-down layer behind the BEL analytics.",
+)
+def slv_engine_mp_results():
+    typed = spark.read.table("brz_engine_mp_results").select(
+        F.expr("try_cast(MPNUM AS INT)").alias("mp_num"),
+        F.expr("try_cast(VAL_DATE AS DATE)").alias("valuation_date"),
+        F.expr("try_cast(AGE_ATT AS INT)").alias("age_attained"),
+        F.col("SEX").alias("sex"),
+        F.col("SMOKER_STAT").alias("smoker_status"),
+        F.expr("try_cast(DUR_IF_Y AS DOUBLE)").alias("dur_if_y"),
+        F.expr("try_cast(OS_TERM_Y AS INT)").alias("outstanding_term_years"),
+        F.expr("try_cast(POLS_IF AS BIGINT)").alias("policy_count"),
+        F.expr("try_cast(SUM_ASSURED AS BIGINT)").alias("sum_assured"),
+        F.expr("try_cast(PV_PREM AS DOUBLE)").alias("pv_premiums"),
+        F.expr("try_cast(PV_CLAIM AS DOUBLE)").alias("pv_claims"),
+        F.expr("try_cast(PV_EXP AS DOUBLE)").alias("pv_expenses"),
+        F.expr("try_cast(BEL AS DOUBLE)").alias("bel"),
+        F.expr("try_cast(BEL_DOWN100 AS DOUBLE)").alias("bel_down100"),
+        F.expr("try_cast(BEL_UP100 AS DOUBLE)").alias("bel_up100"),
+        F.col("BASIS_ID").alias("assumption_set_id"),
+        F.expr("try_cast(CURVE_DT AS DATE)").alias("curve_date"),
+        "_source_file",
+        "_ingested_at",
+    )
+    latest = Window.partitionBy("valuation_date", "mp_num").orderBy(F.col("_ingested_at").desc())
+    return (typed.withColumn("_rn", F.row_number().over(latest))
+            .filter("_rn = 1").drop("_rn"))
 
 
 @dlt.table(

@@ -33,10 +33,6 @@ resources:
           environment_key: default
           notebook_task:
             notebook_path: ../02_assumption_governance/00_assumption_master.py
-        - task_key: prophet_results
-          environment_key: default
-          notebook_task:
-            notebook_path: ../03_results_and_genie/00_prophet_results_mock.py
         - task_key: external_scenarios
           environment_key: default
           notebook_task:
@@ -166,6 +162,55 @@ resources:
           environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/04_create_genie_space.py
+        - task_key: bel_analytics
+          depends_on:
+            - task_key: refresh_results
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/05_bel_analytics.py
+
+    # The mock actuarial engine, orchestrated: picks up the exported model point
+    # file, values the term book (base + ±100bp), dumps results CSVs — behaving
+    # exactly like the real engine does from the outside.
+    lifecast_engine_run:
+      name: lifecast_engine_run
+      description: "The engine run (mock): consumes the exported MPF + approved basis + curve, values the term book per model point with ±100bp sensitivities, dumps estate results CSVs for the results run to ingest."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+      tasks:
+        - task_key: engine_run
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/00_engine_run.py
+
+    # The whole quarter close as one orchestrated workflow: feed -> gate -> MPF,
+    # then the engine, then the governed results layer + BI + analytics.
+    lifecast_quarter_close:
+      name: lifecast_quarter_close
+      description: "Quarter close, end to end: overnight run (feed -> gate -> model point file) -> engine run -> results run (ingest, exports, dashboard, Genie, analytics). One workflow, fully governed."
+      tags:
+        project: lifecast
+      tasks:
+        - task_key: overnight
+          run_job_task:
+            job_id: ${resources.jobs.lifecast_overnight_run.id}
+        - task_key: engine
+          depends_on:
+            - task_key: overnight
+          run_job_task:
+            job_id: ${resources.jobs.lifecast_engine_run.id}
+        - task_key: results
+          depends_on:
+            - task_key: engine
+          run_job_task:
+            job_id: ${resources.jobs.lifecast_results_run.id}
 
     # Phase 4 (a) — consume: validate, version and activate an external ESG
     # scenario delivery. Zero friction for licensed firms.
