@@ -13,9 +13,9 @@ from databricks.sdk import WorkspaceClient
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from content import (AI_PAGE, BLOCKS, CARDS, FLOWS, GOV_AGENT, GOV_SHOWCASE,
-                     GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS, POC_PLAN, ROADMAP,
-                     TERMS, TILES)
+from content import (AI_PAGE, BLOCKS, CARDS, DEMO_GUIDE_URL, FLOWS, GOV_AGENT,
+                     GOV_SHOWCASE, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS,
+                     POC_PLAN, ROADMAP, TERMS, TILES)
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -184,6 +184,7 @@ def content():
                        for k, b in BLOCKS.items()},
             "gov_showcase": GOV_SHOWCASE, "gov_agent": GOV_AGENT, "roadmap": ROADMAP,
             "ai": AI_PAGE,
+            "demo_guide": DEMO_GUIDE_URL,
             "host": HOST, "catalog": CATALOG}
 
 
@@ -223,7 +224,8 @@ def status():
 
 
 # ── Management tab: run control, trigger, and the Genie overseer proxy ──────
-RUN_JOBS = {"overnight": "lifecast_overnight_run", "bad_feed": "lifecast_bad_feed_day"}
+RUN_JOBS = {"overnight": "lifecast_overnight_run", "bad_feed": "lifecast_bad_feed_day",
+            "reset": "lifecast_reset_demo"}
 
 
 @app.get("/api/runcontrol")
@@ -282,6 +284,9 @@ def trigger(req: TriggerReq):
         elif req.action in ("inject", "restore"):
             jid = ids.get(RUN_JOBS["bad_feed"])
             run = w().jobs.run_now(jid, job_parameters={"action": req.action})
+        elif req.action == "reset":
+            jid = ids.get(RUN_JOBS["reset"])
+            run = w().jobs.run_now(jid)
         else:
             return {"error": "unknown action"}
         return {"ok": True, "url": f"{HOST}/jobs/{jid}/runs/{run.run_id}"}

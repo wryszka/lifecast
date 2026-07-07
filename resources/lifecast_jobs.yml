@@ -329,6 +329,34 @@ resources:
           notebook_task:
             notebook_path: ../06_stochastic_boundaries/00_stochastic_fan_out.py
 
+    # Reset the demo to a clean, presentable state. Run this if anything looks
+    # broken: restores the feed (removes any injected bad files + full refresh),
+    # then runs the whole quarter close (overnight -> engine -> results).
+    lifecast_reset_demo:
+      name: lifecast_reset_demo
+      description: "Reset demo: restore the feed (remove injected bad files, full refresh), then run the full quarter close. Leaves everything GREEN and current — safe to run any time."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: action
+          default: restore
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+      tasks:
+        - task_key: restore_feed
+          environment_key: default
+          notebook_task:
+            notebook_path: ../01_model_point_pipeline/03_bad_feed_day.py
+        - task_key: quarter_close
+          depends_on:
+            - task_key: restore_feed
+          run_job_task:
+            job_id: ${resources.jobs.lifecast_quarter_close.id}
+
     # Demo lever — inject the bad feed day (gate goes RED, run stops), or
     # restore (remove the bad file + full-refresh the pipeline, gate GREEN).
     lifecast_bad_feed_day:

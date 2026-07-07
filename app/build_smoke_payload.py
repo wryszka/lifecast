@@ -49,6 +49,7 @@ payload = {
                for k, b in content.BLOCKS.items()},
     "gov_showcase": content.GOV_SHOWCASE, "gov_agent": content.GOV_AGENT,
     "roadmap": content.ROADMAP, "ai": content.AI_PAGE,
+    "demo_guide": "https://smoke.invalid/demo-guide",
     "host": "https://smoke.invalid", "catalog": "smoke_catalog",
 }
 out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/content_test.json"

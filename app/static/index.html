@@ -326,7 +326,8 @@ function shell(active, html){
       <a href="#/block/roadmap" class="ph ${active==='roadmap'?'on':''}">Roadmap<span class="mini">roadmap</span></a>
     </nav>
     <div class="sidefoot" style="padding-bottom:8px">
-      <a href="#/terms">Terms</a> · <a href="#/personas">Personas</a> · <a href="#/poc">POC plan</a></div>
+      <a href="#/terms">Terms</a> · <a href="#/personas">Personas</a> · <a href="#/poc">POC plan</a><br>
+      <a href="${DATA?DATA.demo_guide:'#'}" target="_blank">Demo guide ↗</a> · <a onclick="resetDemo()" style="cursor:pointer">Reset demo</a></div>
     <div class="sidefoot" style="border-top:none;padding-top:4px">About this demo — Bricksurance Life
     is fictional; every figure is synthetic and illustrative. No client data, no actuarial methodology.</div>
   </aside>
@@ -648,6 +649,15 @@ async function triggerRun(action, btn){
       headers:{'Content-Type':'application/json'},body:JSON.stringify({action})})).json();
     msg.innerHTML = r.ok ? `Started — <a href="${r.url}" target="_blank">watch the run ↗</a>` : esc(r.error||'Failed.');
   }catch(e){ msg.textContent='Failed to start.'; }
+}
+
+async function resetDemo(){
+  if(!confirm('Reset the demo? Restores the feed, then runs the full quarter close (~10 min). Safe to run any time.')) return;
+  try{
+    const r = await (await fetch('api/run/trigger',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reset'})})).json();
+    alert(r.ok ? 'Reset started — everything will be GREEN and current in about 10 minutes.' : (r.error||'Failed to start.'));
+  }catch(e){ alert('Failed to start the reset.'); }
 }
 
 async function askOverseer(){

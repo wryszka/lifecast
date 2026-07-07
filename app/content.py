@@ -8,6 +8,8 @@ app.py resolves into URLs (path-based where possible, ID-resolved best-effort).
 No business logic lives here — curated structure and short annotations only.
 """
 
+DEMO_GUIDE_URL = "https://docs.google.com/document/d/1daijoVb751CezD_qLQBEqLPbM4HePms7ScvBa24hxfg/edit"
+
 # ── Landing tiles: one per use case, simplest first. Tile 01 opens the first
 # story-flow page; the rest link to their live assets until their story pages
 # are written. ───────────────────────────────────────────────────────────────

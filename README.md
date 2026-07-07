@@ -7,6 +7,8 @@ runs unchanged.
 
 Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAUDE.md`](CLAUDE.md)
 
+**📗 Demo guide (part one): [Google Doc](https://docs.google.com/document/d/1daijoVb751CezD_qLQBEqLPbM4HePms7ScvBa24hxfg/edit)** — the 15-minute script, reset instructions, asset map.
+
 > **About this demo** — Bricksurance Life is a fictional insurer; every policy, premium
 > and extract here is synthetic. The demo shows *how to model* on Databricks; it contains
 > no client data, no pricing logic and no actuarial formulae.
