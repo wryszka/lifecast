@@ -53,6 +53,8 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+        - name: job_run_id
+          default: "{{job.run_id}}"
       environments:
         - environment_key: default
           spec:
@@ -130,7 +132,7 @@ resources:
     # dashboard and Genie space in place (both tasks idempotent).
     lifecast_results_run:
       name: lifecast_results_run
-      description: "Phase 3: results run — refresh the governed results layer, export the board pack (Excel+CSV), publish the LifeCast — BEL Movement dashboard, ensure the LifeCast — Results Genie space."
+      description: "Phase 3: results run — refresh the governed results layer, run the BEL analytics + run-audit trail, export the board pack (Excel+CSV, with rate-risk and audit sheets), publish the LifeCast — BEL Movement dashboard, ensure the LifeCast — Results Genie space."
       tags:
         project: lifecast
       parameters:
@@ -144,30 +146,38 @@ resources:
         - task_key: refresh_results
           pipeline_task:
             pipeline_id: ${resources.pipelines.lifecast_results_pipeline.id}
-        - task_key: cfo_export
-          depends_on:
-            - task_key: refresh_results
-          environment_key: default
-          notebook_task:
-            notebook_path: ../03_results_and_genie/02_cfo_export.py
-        - task_key: publish_dashboard
-          depends_on:
-            - task_key: refresh_results
-          environment_key: default
-          notebook_task:
-            notebook_path: ../03_results_and_genie/03_create_dashboard.py
-        - task_key: genie_space
-          depends_on:
-            - task_key: refresh_results
-          environment_key: default
-          notebook_task:
-            notebook_path: ../03_results_and_genie/04_create_genie_space.py
         - task_key: bel_analytics
           depends_on:
             - task_key: refresh_results
           environment_key: default
           notebook_task:
             notebook_path: ../03_results_and_genie/05_bel_analytics.py
+        - task_key: run_audit
+          depends_on:
+            - task_key: refresh_results
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/06_run_audit.py
+        - task_key: cfo_export
+          depends_on:
+            - task_key: bel_analytics
+            - task_key: run_audit
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/02_cfo_export.py
+        - task_key: publish_dashboard
+          depends_on:
+            - task_key: bel_analytics
+            - task_key: run_audit
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/03_create_dashboard.py
+        - task_key: genie_space
+          depends_on:
+            - task_key: run_audit
+          environment_key: default
+          notebook_task:
+            notebook_path: ../03_results_and_genie/04_create_genie_space.py
 
     # The mock actuarial engine, orchestrated: picks up the exported model point
     # file, values the term book (base + ±100bp), dumps results CSVs — behaving
@@ -180,6 +190,8 @@ resources:
       parameters:
         - name: catalog
           default: ${var.catalog}
+        - name: job_run_id
+          default: "{{job.run_id}}"
       environments:
         - environment_key: default
           spec:

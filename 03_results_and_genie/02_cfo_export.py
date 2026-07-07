@@ -27,6 +27,7 @@ VOLUME_ROOT = f"/Volumes/{CATALOG}/{SCHEMA}/lifecast_files"
 
 import shutil
 
+import pandas as pd
 from pyspark.sql import functions as F
 
 latest = spark.table(f"{FQ}.gld_results_by_product").agg(F.max("reporting_period")).first()[0]
@@ -74,6 +75,50 @@ ws.cell(row=total_row + 2, column=1,
         value="QRT / XBRL regulatory templates remain in Excel — connect, don't replace.")
 for col, width in zip("ABCDEF", [24, 16, 16, 14, 12, 12]):
     ws.column_dimensions[col].width = width
+
+# COMMAND ----------
+
+# MAGIC %md ## Sheet 2 — the rate-risk map (from the engine's own ±100bp runs)
+
+# COMMAND ----------
+
+sens = (spark.table(f"{FQ}.gld_bel_sensitivity")
+        .toPandas()
+        .pivot_table(index="age_band", columns="term_band", values="dv100_up", aggfunc="sum")
+        .sort_index())
+TERM_ORDER = ["0–5y", "6–10y", "11–20y", "21y+"]
+sens = sens[[t for t in TERM_ORDER if t in sens.columns]]
+
+ws2 = wb.create_sheet("Rate risk")
+ws2["A1"] = "BEL change for +100bp, by attained age × outstanding term (£)"
+ws2["A1"].font = Font(bold=True, size=12)
+ws2.cell(row=3, column=1, value="Age band").font = Font(bold=True)
+for c, term in enumerate(sens.columns, start=2):
+    ws2.cell(row=3, column=c, value=str(term)).font = Font(bold=True)
+for r_i, (age, row) in enumerate(sens.iterrows(), start=4):
+    ws2.cell(row=r_i, column=1, value=str(age))
+    for c, term in enumerate(sens.columns, start=2):
+        v = row[term]
+        ws2.cell(row=r_i, column=c, value=None if pd.isna(v) else float(v))
+ws2.column_dimensions["A"].width = 12
+
+# COMMAND ----------
+
+# MAGIC %md ## Sheet 3 — provenance. Even the spreadsheet carries its papers.
+
+# COMMAND ----------
+
+aud = (spark.table(f"{FQ}.gld_run_audit")
+       .orderBy(F.col("engine_run_at").desc()).limit(1).toPandas())
+
+ws3 = wb.create_sheet("Audit")
+ws3["A1"] = "Where these numbers came from (gld_run_audit, latest engine run)"
+ws3["A1"].font = Font(bold=True, size=12)
+for r_i, (field, value) in enumerate(aud.iloc[0].items(), start=3):
+    ws3.cell(row=r_i, column=1, value=str(field)).font = Font(bold=True)
+    ws3.cell(row=r_i, column=2, value="" if value is None else str(value))
+ws3.column_dimensions["A"].width = 26
+ws3.column_dimensions["B"].width = 60
 
 local = "/tmp/board_pack.xlsx"
 wb.save(local)

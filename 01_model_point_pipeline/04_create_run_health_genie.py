@@ -28,6 +28,7 @@ TABLES = sorted([
     f"{CATALOG}.{SCHEMA}.gld_run_signoff",
     f"{CATALOG}.{SCHEMA}.slv_policies_quarantine",
     f"{CATALOG}.{SCHEMA}.gld_model_points",
+    f"{CATALOG}.{SCHEMA}.gld_run_audit",
 ])
 
 DESCRIPTION = (
@@ -50,11 +51,18 @@ from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
 
+serialized = json.dumps(
+    {"version": 2, "data_sources": {"tables": [{"identifier": t} for t in TABLES]}})
+
 existing = w.api_client.do("GET", "/api/2.0/genie/spaces").get("spaces", [])
 match = [s for s in existing if s.get("title") == TITLE]
 if match:
+    # Update in place so the table list and description never drift from this
+    # script (PATCH replaces the serialized space — table list is owned here).
     space_id = match[0]["space_id"]
-    print(f"Genie space already exists: {space_id} — skipping create.")
+    w.api_client.do("PATCH", f"/api/2.0/genie/spaces/{space_id}",
+                    body={"description": DESCRIPTION, "serialized_space": serialized})
+    print(f"Genie space already exists: {space_id} — updated tables + description.")
 else:
     warehouses = list(w.warehouses.list())
     wh = next((x for x in warehouses if x.enable_serverless_compute), warehouses[0])
@@ -63,9 +71,7 @@ else:
         "description": DESCRIPTION,
         "warehouse_id": wh.id,
         "parent_path": FOLDER,
-        "serialized_space": json.dumps(
-            {"version": 2, "data_sources": {"tables": [{"identifier": t} for t in TABLES]}}
-        ),
+        "serialized_space": serialized,
     }
     resp = w.api_client.do("POST", "/api/2.0/genie/spaces", body=body)
     space_id = resp["space_id"]

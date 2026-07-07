@@ -127,6 +127,45 @@ def slv_engine_mp_results():
 
 
 @dlt.table(
+    name="brz_engine_run_log",
+    comment="As-landed engine run logs (one row per engine run) — Auto Loader over prophet/run_log. The raw material of the audit trail.",
+)
+def brz_engine_run_log():
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("header", "true")
+        .load(f"{VOLUME_ROOT}/prophet/run_log")
+        .select("*",
+                F.col("_metadata.file_path").alias("_source_file"),
+                F.current_timestamp().alias("_ingested_at"))
+    )
+
+
+@dlt.table(
+    name="slv_engine_run_log",
+    comment="Typed engine run log — which model point file, which basis, which curve, who ran it, when. One row per engine run.",
+)
+def slv_engine_run_log():
+    return spark.read.table("brz_engine_run_log").select(
+        F.col("RUN_ID").alias("run_id"),
+        F.expr("try_cast(RUN_TS AS TIMESTAMP)").alias("run_ts"),
+        F.expr("try_cast(VAL_DATE AS DATE)").alias("valuation_date"),
+        F.col("REPORTING_PERIOD").alias("reporting_period"),
+        F.col("MPF_FILE").alias("mpf_file"),
+        F.expr("try_cast(MP_COUNT AS INT)").alias("mp_count"),
+        F.col("BASIS_ID").alias("assumption_set_id"),
+        F.expr("try_cast(CURVE_DT AS DATE)").alias("curve_date"),
+        F.expr("try_cast(RUNTIME_S AS DOUBLE)").alias("runtime_s"),
+        F.col("RESULTS_FILE").alias("results_file"),
+        F.col("DETAIL_FILE").alias("detail_file"),
+        F.col("RUN_BY").alias("run_by"),
+        F.col("JOB_RUN_ID").alias("job_run_id"),
+        "_ingested_at",
+    )
+
+
+@dlt.table(
     name="gld_results_by_product",
     comment="Best estimate liability and PV components by product line and reporting quarter — the governed results layer Genie and the dashboard query.",
 )

@@ -104,12 +104,12 @@ print(f"verdict: {verdict}")
 
 # COMMAND ----------
 
-# Record the gate result — every run, GREEN or RED.
-try:
-    ctx = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
-    job_run_id = str(ctx.get("tags", {}).get("multitaskParentRunId")
-                     or ctx.get("tags", {}).get("jobRunId") or "interactive")
-except Exception:
+# Record the gate result — every run, GREEN or RED. The workflow run id
+# arrives as a job parameter ({{job.run_id}} in the job spec) — notebook-
+# context tags don't carry it on serverless compute.
+dbutils.widgets.text("job_run_id", "interactive")
+job_run_id = dbutils.widgets.get("job_run_id") or "interactive"
+if job_run_id.startswith("{{"):
     job_run_id = "interactive"
 
 run_ts = datetime.datetime.now()

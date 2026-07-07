@@ -236,5 +236,43 @@ detail_name = f"ENGINE_MP_RESULTS_{quarter}_{run_id}.csv"
 detail.to_csv(f"{detail_dir}/{detail_name}", index=False)
 print(f"{detail_name}  ({len(detail):,} model points, base + ±{SENS_BP}bp)")
 
+# COMMAND ----------
+
+# MAGIC %md ## 5 · …and its run log
+# MAGIC Engines write run logs. This one lands on the volume with the results and gets
+# MAGIC ingested through the same governed front door — it is the raw material of the
+# MAGIC audit trail (`gld_run_audit`): which file, which basis, which curve, who, when.
+
+# COMMAND ----------
+
+# The workflow run id arrives as a job parameter ({{job.run_id}} in the job
+# spec) — notebook-context tags don't carry it on serverless compute.
+dbutils.widgets.text("job_run_id", "interactive")
+job_run_id = dbutils.widgets.get("job_run_id") or "interactive"
+if job_run_id.startswith("{{"):
+    job_run_id = "interactive"
+run_by = spark.sql("SELECT current_user()").first()[0]
+
+run_log = pd.DataFrame([{
+    "RUN_ID": run_id,
+    "RUN_TS": run_ts.isoformat(),
+    "VAL_DATE": str(val_date),
+    "REPORTING_PERIOD": quarter,
+    "MPF_FILE": mpf_files[-1].split("/")[-1],
+    "MP_COUNT": len(mpf),
+    "BASIS_ID": basis_id,
+    "CURVE_DT": str(curve_date),
+    "SENS_BP": SENS_BP,
+    "RUNTIME_S": round(runtime_s, 1),
+    "RESULTS_FILE": f"PROPHET_RESULTS_{quarter}_{run_id}.csv",
+    "DETAIL_FILE": detail_name,
+    "RUN_BY": run_by,
+    "JOB_RUN_ID": job_run_id,
+}])
+log_dir = f"{VOLUME_ROOT}/prophet/run_log"
+dbutils.fs.mkdirs(log_dir)
+run_log.to_csv(f"{log_dir}/ENGINE_RUN_LOG_{quarter}_{run_id}.csv", index=False)
+print(f"ENGINE_RUN_LOG_{quarter}_{run_id}.csv  (run by {run_by})")
+
 print(f"\nEngine run {run_id} complete — TERM fed by the governed model point file; "
       "CREDIT_LIFE and GROUP_PROTECTION still legacy-fed. The results run ingests these dumps next.")

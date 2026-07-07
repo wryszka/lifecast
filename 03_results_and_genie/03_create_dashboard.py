@@ -54,6 +54,22 @@ datasets = [
      "queryLines": [f"SELECT reporting_period, product_line, CAST(bel/1e6 AS DOUBLE) AS bel_m, "
                     f"CAST(bel_movement/1e6 AS DOUBLE) AS movement_m, movement_pct, policy_count "
                     f"FROM {T}.gld_bel_movement ORDER BY reporting_period DESC, product_line"]},
+    {"name": "sensitivity", "displayName": "Rate risk",
+     "queryLines": [f"SELECT age_band, term_band, CAST(dv100_up/1e6 AS DOUBLE) AS dv100_up_m "
+                    f"FROM {T}.gld_bel_sensitivity ORDER BY age_band, term_band"]},
+    {"name": "concentration", "displayName": "Concentration",
+     "queryLines": [f"SELECT rank, cum_share_pct FROM {T}.gld_bel_concentration ORDER BY rank"]},
+    {"name": "cohort_movers", "displayName": "Cohort movers",
+     "queryLines": [f"SELECT product_line, cohort_year, CAST(bel/1e6 AS DOUBLE) AS bel_m, "
+                    f"CAST(bel_movement/1e6 AS DOUBLE) AS movement_m, movement_pct "
+                    f"FROM {T}.gld_movement_by_cohort "
+                    f"WHERE reporting_period = (SELECT MAX(reporting_period) FROM {T}.gld_movement_by_cohort) "
+                    f"AND bel_movement IS NOT NULL ORDER BY ABS(bel_movement) DESC LIMIT 12"]},
+    {"name": "audit", "displayName": "Run audit",
+     "queryLines": [f"SELECT reporting_period, run_id, engine_run_at, engine_run_by, model_point_file, "
+                    f"input_gate_verdict, assumption_set_id, basis_version, basis_approved_by, "
+                    f"curve_date, minutes_to_queryable "
+                    f"FROM {T}.gld_run_audit ORDER BY engine_run_at DESC"]},
 ]
 
 
@@ -117,9 +133,66 @@ layout = [
             ]}}, 0, 11, 6, 6),
 ]
 
+layout2 = [
+    {"widget": {"name": "header2", "textbox_spec":
+        "## Risk & audit — the questions behind the number\n"
+        "Rate risk from the engine's own ±100bp runs; concentration and cohort drill from the "
+        "per-model-point detail; and the audit trail — which file, which basis, who, when — for every run. "
+        "*Synthetic and illustrative.*"},
+     "position": {"x": 0, "y": 0, "width": 6, "height": 2}},
+    widget("ch_sens", "sensitivity", ["age_band", "term_band", "dv100_up_m"],
+           {"version": 3, "widgetType": "bar",
+            "frame": {"showTitle": True, "title": "BEL change for +100bp, by age band and outstanding term (£m)"},
+            "encodings": {
+                "x": {"fieldName": "age_band", "scale": {"type": "categorical"}, "displayName": "Attained age"},
+                "y": {"fieldName": "dv100_up_m", "scale": {"type": "quantitative"}, "displayName": "ΔBEL +100bp (£m)"},
+                "color": {"fieldName": "term_band", "scale": {"type": "categorical"}, "displayName": "Outstanding term"},
+            }}, 0, 2, 3, 6),
+    widget("ch_conc", "concentration", ["rank", "cum_share_pct"],
+           {"version": 3, "widgetType": "line",
+            "frame": {"showTitle": True, "title": "Concentration — cumulative share of |BEL| by ranked model point"},
+            "encodings": {
+                "x": {"fieldName": "rank", "scale": {"type": "quantitative"}, "displayName": "Model point rank"},
+                "y": {"fieldName": "cum_share_pct", "scale": {"type": "quantitative"}, "displayName": "Cumulative share (%)"},
+            }}, 3, 2, 3, 6),
+    widget("tbl_movers", "cohort_movers",
+           ["product_line", "cohort_year", "bel_m", "movement_m", "movement_pct"],
+           {"version": 2, "widgetType": "table",
+            "frame": {"showTitle": True, "title": "Largest cohort-level movers, latest quarter"},
+            "encodings": {"columns": [
+                {"fieldName": "product_line", "displayName": "Product line"},
+                {"fieldName": "cohort_year", "displayName": "Cohort"},
+                {"fieldName": "bel_m", "displayName": "BEL (£m)"},
+                {"fieldName": "movement_m", "displayName": "Movement (£m)"},
+                {"fieldName": "movement_pct", "displayName": "Movement %"},
+            ]}}, 0, 8, 6, 5),
+    widget("tbl_audit", "audit",
+           ["reporting_period", "run_id", "engine_run_at", "engine_run_by", "model_point_file",
+            "input_gate_verdict", "assumption_set_id", "basis_version", "basis_approved_by",
+            "curve_date", "minutes_to_queryable"],
+           {"version": 2, "widgetType": "table",
+            "frame": {"showTitle": True, "title": "Run audit — every number carries its papers"},
+            "encodings": {"columns": [
+                {"fieldName": "reporting_period", "displayName": "Quarter"},
+                {"fieldName": "run_id", "displayName": "Engine run"},
+                {"fieldName": "engine_run_at", "displayName": "Run at"},
+                {"fieldName": "engine_run_by", "displayName": "Run by"},
+                {"fieldName": "model_point_file", "displayName": "Input file"},
+                {"fieldName": "input_gate_verdict", "displayName": "Input gate"},
+                {"fieldName": "assumption_set_id", "displayName": "Basis"},
+                {"fieldName": "basis_version", "displayName": "Basis v"},
+                {"fieldName": "basis_approved_by", "displayName": "Basis approved by"},
+                {"fieldName": "curve_date", "displayName": "Curve"},
+                {"fieldName": "minutes_to_queryable", "displayName": "Mins to queryable"},
+            ]}}, 0, 13, 6, 5),
+]
+
 serialized = json.dumps({
     "datasets": datasets,
-    "pages": [{"name": "results", "displayName": "Results", "layout": layout}],
+    "pages": [
+        {"name": "results", "displayName": "Results", "layout": layout},
+        {"name": "risk_audit", "displayName": "Risk & audit", "layout": layout2},
+    ],
 })
 
 # COMMAND ----------
