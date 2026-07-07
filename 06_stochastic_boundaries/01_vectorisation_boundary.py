@@ -15,7 +15,9 @@
 # MAGIC   declarations conditioned on solvency. That's a loop-carried dependency —
 # MAGIC   you must step through time.
 # MAGIC - The fix for the hot loop is compilation (Numba/JAX) — **solvable, not free**:
-# MAGIC   real engineering, worth it only where profiling says so.
+# MAGIC   real engineering, worth it only where profiling says so. And the same JAX
+# MAGIC   code runs on serverless GPU compute when one machine's cores aren't enough —
+# MAGIC   an engineering decision made per hot loop, never an upfront platform bet.
 
 # COMMAND ----------
 
@@ -91,7 +93,7 @@ print(f"decision-feedback projection: {t_feedback:,.2f} s — note the loop is o
 # MAGIC | Deterministic / no feedback | fully | milliseconds — free lunch |
 # MAGIC | Pure ratchet / lookback | fully (`cummax`, `cumprod`) | still cheap |
 # MAGIC | Decision feedback (management actions, dynamic hedging) | across **paths**, not time | a time loop — seconds to minutes |
-# MAGIC | Heavy per-step logic inside that time loop | no | compile the hot loop: **Numba/JAX** — solvable, not free |
+# MAGIC | Heavy per-step logic inside that time loop | no | compile the hot loop: **Numba/JAX**, on GPU when cores run out — solvable, not free |
 # MAGIC
 # MAGIC And when one machine isn't enough, the time loop parallelises across
 # MAGIC **scenarios** the same way as `00_stochastic_fan_out` — the platform's answer

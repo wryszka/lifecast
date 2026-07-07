@@ -157,7 +157,7 @@ BLOCKS = {
    ("Old → new", "Engine content → Python on the platform, validated side by side per model point."),
    ("Management", "Run overseer + reconciliation agents, MLflow run history, validate-to-tolerance gates."),
   ],
-  "posture": "Low-hanging fruit: the deterministic term projection. Stochastic is roadmap — the hard last mile, said openly.",
+  "posture": "Low-hanging fruit: the deterministic term projection. Stochastic is roadmap — the hard last mile, said openly. That last mile is where accelerated (GPU) compute enters, per hot loop, when profiling says so — roadmap, stated, not sold.",
   "assets": [("Projection migration assets — live in the workspace", "folder:05_projection_migration"),
              ("Stochastic fan-out assets — live in the workspace", "folder:06_stochastic_boundaries")],
   "agents": [("Run overseer — did it complete, anything quarantined, safe to release?", "specced"),
