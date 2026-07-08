@@ -319,8 +319,8 @@ function shell(active, html){
       <a href="#/learn" class="${active==='learn'?'on':''}">Learn the basics<span class="mini">start here</span></a>
       <div class="sec">Inputs</div>
       <a href="#/flow/model-point-feed" class="${active==='mp'?'on':''}">Model points<span class="mini live">live</span></a>
-      <a href="#/block/assumptions" class="ph ${active==='assumptions'?'on':''}">Assumptions<span class="mini">next</span></a>
-      <a href="#/block/scenarios" class="ph ${active==='scenarios'?'on':''}">Scenarios (ESG)<span class="mini">planned</span></a>
+      <a href="#/block/assumptions" class="${active==='assumptions'?'on':''}">Assumptions<span class="mini live">live</span></a>
+      <a href="#/block/scenarios" class="${active==='scenarios'?'on':''}">Scenarios (ESG)<span class="mini live">live</span></a>
       <div class="sec">Modelling & results</div>
       <a href="#/block/modelling" class="${active==='modelling'?'on':''}">Modelling<span class="mini live">live</span></a>
       <a href="#/block/results" class="${active==='results'?'on':''}">Results<span class="mini live">live</span></a>
@@ -441,10 +441,12 @@ function landing(maptab){
       <a class="pblock c-blue primary" href="#/flow/model-point-feed"><h3>Policy data → model point file<span class="ntag live">live</span></h3>
        <p>Raw policy records grouped into the summarised file the engine reads — gated, reconciled, lineage end to end.</p>
        <div class="go">Open the beat →</div></a>
-      <a class="pblock c-blue" href="#/block/assumptions"><h3>Assumptions — the basis<span class="ntag next">next</span></h3>
-       <p>Mortality, lapse and expense tables: versioned, approved, audit-trailed. Excel entry kept.</p>
+      <a class="pblock c-blue" href="#/block/assumptions"><h3>Assumptions — the basis<span class="ntag live">live</span></h3>
+       <p>Mortality, lapse and expense: versioned, maker/checker approved, audit-trailed — Excel entry kept.</p>
        <div class="go">Open the block →</div></a>
-      ${block(t[3], 'Economic scenarios', 'Your scenario provider\'s sets, versioned and gated — plus an illustrative generated set.')}
+      <a class="pblock c-blue" href="#/block/scenarios"><h3>Economic scenarios<span class="ntag live">live</span></h3>
+       <p>Your provider's sets validated, versioned and gated — plus an illustrative QuantLib set, tracked in MLflow.</p>
+       <div class="go">Open the block →</div></a>
     </div>
     <div class="pmaparr">→</div>
     <div class="pcol"><div class="collbl">The engine</div>
