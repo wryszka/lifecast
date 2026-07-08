@@ -341,6 +341,77 @@ resources:
           notebook_task:
             notebook_path: ../06_stochastic_boundaries/00_stochastic_fan_out.py
 
+    # Use case 07, parts 1+2 — the model factory: build the projection as a UC
+    # model (freeze basis+curve into the version, v1 loop -> v2 vectorised,
+    # compare gate -> promote), then run @champion from Unity across the grid
+    # (grid_size is the scale knob).
+    lifecast_model_factory:
+      name: lifecast_model_factory
+      description: "Use case 07 (parts 1+2): build the term projection as a UC-registered model (versioned, basis+curve frozen in), compare/promote via the penny-parity gate, then run @champion from Unity across a compute grid — grid_size is a parameter."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: grid_size
+          default: "10"
+        - name: replication
+          default: "100"
+      environments:
+        - environment_key: ml
+          spec:
+            base_environment: /Workspace/Shared/lifecast/environments/lifecast_ml.yml
+        # Packaging the torch variant needs torch importable, not a GPU.
+        - environment_key: torch
+          spec:
+            base_environment: /Workspace/Shared/lifecast/environments/lifecast_torch.yml
+      tasks:
+        - task_key: build_model
+          environment_key: ml
+          notebook_task:
+            notebook_path: ../07_model_factory/00_build_model.py
+        - task_key: run_grid
+          depends_on:
+            - task_key: build_model
+          environment_key: ml
+          notebook_task:
+            notebook_path: ../07_model_factory/01_run_grid.py
+        - task_key: gpu_variant
+          depends_on:
+            - task_key: build_model
+          environment_key: torch
+          notebook_task:
+            notebook_path: ../07_model_factory/02_gpu_variant.py
+
+    # Use case 07, part 3 — run @gpu from Unity on serverless GPU compute (A10).
+    # Separate job so the CPU factory never depends on GPU availability. NOTE:
+    # the GPU pool can LOAD from the registry but not publish to it (no egress
+    # to artifact storage) — packaging happens in the factory's gpu_variant task.
+    lifecast_model_factory_gpu:
+      name: lifecast_model_factory_gpu
+      description: "Use case 07 (part 3): load the @gpu version of lifecast_engine_model from Unity on serverless GPU compute (A10) — penny-parity gate vs @champion, then seriatim-scale CPU-vs-GPU timing (gld_gpu_timings)."
+      tags:
+        project: lifecast
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: replication
+          default: "100"
+      environments:
+        # The Databricks AI base env (databricks_ai_v5) isn't enabled on this
+        # workspace (custom yaml paths only) — the GPU standard environment
+        # ships CUDA torch, so the plain env works.
+        - environment_key: gpu
+          spec:
+            environment_version: "4"
+      tasks:
+        - task_key: run_gpu
+          environment_key: gpu
+          compute:
+            hardware_accelerator: GPU_1xA10
+          notebook_task:
+            notebook_path: ../07_model_factory/03_run_gpu.py
+
     # Reset the demo to a clean, presentable state. Run this if anything looks
     # broken: restores the feed (removes any injected bad files + full refresh),
     # then runs the whole quarter close (overnight -> engine -> results).

@@ -14,8 +14,8 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 from content import (AI_PAGE, BLOCKS, CARDS, DEMO_GUIDE_URL, FLOWS, GOV_AGENT,
-                     GOV_SHOWCASE, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, PERSONAS,
-                     POC_PLAN, ROADMAP, TERMS, TILES)
+                     GOV_SHOWCASE, GOVERNANCE_INVENTORY, GOVERNANCE_SCOPE, LEARN,
+                     PERSONAS, POC_PLAN, ROADMAP, TERMS, TILES)
 
 CATALOG = os.environ.get("CATALOG", "lr_dev_aws_us_catalog")
 SCHEMA = "lifecast"
@@ -84,7 +84,8 @@ def _resolve_ids() -> dict:
         pass
     for key, path in [("projection", "/Shared/lifecast/05_projection_migration/projection"),
                       ("esg", "/Shared/lifecast/04_scenario_management/esg_calibration"),
-                      ("stochastic", "/Shared/lifecast/06_stochastic_boundaries/stochastic")]:
+                      ("stochastic", "/Shared/lifecast/06_stochastic_boundaries/stochastic"),
+                      ("factory", "/Shared/lifecast/07_model_factory/engine_model")]:
         try:
             exp = w().api_client.do(
                 "GET", "/api/2.0/mlflow/experiments/get-by-name",
@@ -106,7 +107,7 @@ def resolve_link(key: str) -> str:
         sub = {"excel": "/excel", "export": "/export/model_point_file", "board_pack": "/export/board_pack"}.get(arg, "")
         return f"{HOST}/explore/data/volumes/{CATALOG}/{SCHEMA}/lifecast_files{sub}"
     if kind == "model":
-        return f"{HOST}/explore/data/models/{CATALOG}/{SCHEMA}/lifecast_term_projection"
+        return f"{HOST}/explore/data/models/{CATALOG}/{SCHEMA}/{arg or 'lifecast_term_projection'}"
     if kind in ("nb", "nb_file", "folder"):
         return f"{HOST}/#workspace/Shared/lifecast/{arg}".rstrip("/")
     if kind == "job":
@@ -184,6 +185,7 @@ def content():
                        for k, b in BLOCKS.items()},
             "gov_showcase": GOV_SHOWCASE, "gov_agent": GOV_AGENT, "roadmap": ROADMAP,
             "ai": AI_PAGE,
+            "learn": LEARN,
             "demo_guide": DEMO_GUIDE_URL,
             "host": HOST, "catalog": CATALOG}
 

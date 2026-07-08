@@ -7,7 +7,7 @@ const html = readFileSync(new URL('./static/index.html', import.meta.url), 'utf8
 const js = html.match(/<script>([\s\S]*)<\/script>/)[1];
 const defined = new Set([...js.matchAll(/(?:async )?function (\w+)\(/g)].map(m => m[1]));
 const needed = ['landing','pocPage','personasPage','termsPage','filePage','governancePage','governanceShowcase',
-  'blockPage','flowPage','cardPage','personaPage','loadRunControl','triggerRun','askOverseer','loadGov','shell','route','aiPage'];
+  'blockPage','flowPage','cardPage','personaPage','loadRunControl','triggerRun','askOverseer','loadGov','shell','route','aiPage','learnPage'];
 const missing = needed.filter(f => !defined.has(f));
 if (missing.length) { console.error('MISSING FUNCTIONS:', missing); process.exit(1); }
 let rootEl = { innerHTML: '' };
@@ -23,7 +23,7 @@ globalThis.confirm = () => false; globalThis.setTimeout = () => {};
 globalThis.location = { hash: '' };
 (0, eval)(js + '\n;globalThis.__route = route;');
 await new Promise(r => setImmediate(r)); // page init sets DATA
-const routes = ['#/','#/destination','#/ai','#/flow/model-point-feed','#/flow/model-point-feed/oldnew',
+const routes = ['#/','#/destination','#/ai','#/learn','#/flow/model-point-feed','#/flow/model-point-feed/oldnew',
   '#/flow/model-point-feed/manage','#/block/assumptions','#/block/scenarios','#/block/modelling',
   '#/block/results','#/block/roadmap','#/governance','#/governance/record','#/terms','#/poc',
   '#/personas','#/p/actuary','#/file/mpf'];

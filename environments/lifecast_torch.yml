@@ -1,0 +1,7 @@
+# LifeCast torch environment — used by the model-factory task that PACKAGES the
+# GPU (torch) variant of lifecast_engine_model. Packaging needs torch importable,
+# not a GPU: the class picks CUDA at load time wherever it runs. The GPU job
+# itself uses the serverless GPU standard environment (torch preinstalled).
+environment_version: '5'
+dependencies:
+  - torch

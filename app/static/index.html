@@ -12,6 +12,9 @@
       --v:#2563eb;--v7:#1d4ed8;--v50:#eff6ff;--v100:#dbeafe;
       --green:#067647;--green-bg:#ecfdf3;--amber:#b54708;--amber-bg:#fffaeb}
 *{box-sizing:border-box;margin:0;padding:0}
+/* Anchor the page: overscroll/rubber-band shows --bg (not white), no gaps
+   around the sidebar at any zoom. */
+html{background:var(--bg);overscroll-behavior:none;height:100%}
 .layout{display:flex;min-height:100vh}
 .side{width:248px;background:#0b1220;color:#fff;display:flex;flex-direction:column;flex-shrink:0;
       position:sticky;top:0;height:100vh}
@@ -313,13 +316,14 @@ function shell(active, html){
       <div><b>LifeCast</b><span>Bricksurance Life</span></div></div>
     <nav class="nav">
       <a href="#/" class="${active==='map'?'on':''}">Overview</a>
+      <a href="#/learn" class="${active==='learn'?'on':''}">Learn the basics<span class="mini">start here</span></a>
       <div class="sec">Inputs</div>
       <a href="#/flow/model-point-feed" class="${active==='mp'?'on':''}">Model points<span class="mini live">live</span></a>
       <a href="#/block/assumptions" class="ph ${active==='assumptions'?'on':''}">Assumptions<span class="mini">next</span></a>
       <a href="#/block/scenarios" class="ph ${active==='scenarios'?'on':''}">Scenarios (ESG)<span class="mini">planned</span></a>
       <div class="sec">Modelling & results</div>
-      <a href="#/block/modelling" class="ph ${active==='modelling'?'on':''}">Modelling<span class="mini">planned</span></a>
-      <a href="#/block/results" class="ph ${active==='results'?'on':''}">Results<span class="mini">planned</span></a>
+      <a href="#/block/modelling" class="${active==='modelling'?'on':''}">Modelling<span class="mini live">live</span></a>
+      <a href="#/block/results" class="${active==='results'?'on':''}">Results<span class="mini live">live</span></a>
       <div class="sec">Cross-cutting</div>
       <a href="#/governance" class="${active==='gov'?'on':''}">Governance</a>
       <a href="#/ai" class="ph ${active==='ai'?'on':''}">AI<span class="mini">preview</span></a>
@@ -449,17 +453,18 @@ function landing(maptab){
         <p>Your licensed modelling engine. It reads the same files it reads today.
         Nothing we build moves it — that's the no-risk transition.</p></div>
       <div class="beside"><div class="collbl">Beside the engine — the migration path</div>
-        <a href="#/block/modelling"><b>Modelling — the content move<span class="ntag planned">planned</span></b>
-          <span>The engine's own calculation in Python, tied out per model point — trust earned
-          run by run. Stochastic fan-out for the runs the overnight window can't fit.</span></a>
+        <a href="#/block/modelling"><b>Modelling — the content move<span class="ntag live">live</span></b>
+          <span>The engine's own calculation in Python, tied out per model point — then versioned
+          in Unity Catalog and run from the registry, on a CPU grid or a GPU.</span></a>
         <p style="font-size:11.5px;color:var(--muted);margin-top:8px">Product by product, at your
         pace. Whether a tied-out product ever moves is your decision — the engine keeps running
         either way. <a href="#/destination">Where does it land? →</a></p></div>
     </div>
     <div class="pmaparr">→</div>
     <div class="pcol"><div class="collbl">Outputs & analytics</div>
-      <a class="pblock c-green" href="#/block/results"><h3>Results & analytics<span class="ntag planned">planned</span></h3>
-       <p>Engine output lands in Delta once; the BEL dashboard and Genie answer in English. The export is always offered.</p>
+      <a class="pblock c-green" href="#/block/results"><h3>Results & analytics<span class="ntag live">live</span></h3>
+       <p>Engine output lands in Delta once; minutes later the dashboard is current, Genie answers
+       in English, and every number carries its audit papers.</p>
        <div class="go">Open the block →</div></a>
       <a class="pblock c-green" href="#/governance"><h3>Governance & audit</h3>
         <p>Every run, every basis, every sign-off — on the record. The regulator's question is a query.</p>
@@ -758,8 +763,8 @@ function termsPage(){
   <div class="crumb"><a href="#/">Overview</a> / terms</div>
   <div class="eyebrow">Before you present</div>
   <h1 class="flow-h2">Eight terms, one line each</h1>
-  <p class="story">Enough to survive the first follow-up question. The full learn-this-process
-  module is coming; until then, these are the words that matter.</p>
+  <p class="story">Enough to survive the first follow-up question. New to all of it?
+  <a href="#/learn">Start with the basics</a> — then these are the words that matter.</p>
   ${DATA.terms.map(t=>`<div class="termrow"><b>${esc(t.term)}</b><span>${esc(t.text)}</span></div>`).join('')}
   <div class="foot">Client-safe — nothing here you couldn't say with the prospect in the room.</div>`);
 }
@@ -810,12 +815,13 @@ function blockPage(key){
     return;
   }
   const b = DATA.blocks[key]; if(!b) return landing();
+  const live = b.state==='live';
   shell(key, `
   <div class="crumb"><a href="#/">Overview</a> / ${esc(b.title)}</div>
-  <div class="eyebrow">${esc(b.section)}<span class="ntag ${esc(b.state)}">${esc(b.state)} · placeholder</span></div>
+  <div class="eyebrow">${esc(b.section)}<span class="ntag ${esc(b.state)}">${esc(b.state)}${live?'':' · placeholder'}</span></div>
   <h1 class="flow-h2">${esc(b.title)}</h1>
   <p class="lead">${esc(b.will_show)}</p>
-  <div class="section" style="margin-top:20px"><span class="eyebrow">The beat, when it lands — same three tabs</span></div>
+  <div class="section" style="margin-top:20px"><span class="eyebrow">${live?'The beat — same three tabs':'The beat, when it lands — same three tabs'}</span></div>
   <div class="phgrid">
     ${b.tabs.map((t,i)=>`<div class="phcard"><span class="tlbl">${i+1} · ${esc(t[0])}</span>
       <p>${esc(t[1])}</p></div>`).join('')}
@@ -823,10 +829,36 @@ function blockPage(key){
   <div class="scopenote">${esc(b.posture)}</div>
   ${b.agents.length?`<div class="section" style="margin-top:18px"><span class="eyebrow">Agents — in this beat's management tab</span></div>`+
     b.agents.map(a=>`<div class="agentrow">${esc(a[0])}<span class="ntag ${esc(a[1])}" style="margin-left:auto">${esc(a[1])}</span></div>`).join(''):''}
-  <div class="section" style="margin-top:18px"><span class="eyebrow">Already live underneath</span>
+  <div class="section" style="margin-top:18px"><span class="eyebrow">${live?'Open the real assets':'Already live underneath'}</span>
     <div class="body">${b.assets.map(a=>`<a href="${a.url}" target="_blank" style="display:block;margin-top:5px;font-weight:600;font-size:13px">${esc(a.label)} ↗</a>`).join('')}</div></div>
-  <div class="foot">An openly-marked placeholder — it states intent, it never fake-works. The
-  workspace assets behind it are real and running today.</div>`);
+  <div class="foot">${live
+    ?'Everything linked above is real and running on this workspace — the story page for this block (the full three-tab beat) is the next build.'
+    :'An openly-marked placeholder — it states intent, it never fake-works. The workspace assets behind it are real and running today.'}</div>`);
+}
+
+function learnPage(){
+  const L = DATA.learn;
+  const sec = s => {
+    if(s.steps) return `<div class="section" style="margin-top:24px"><span class="eyebrow">${esc(s.h)}</span></div>`
+      + s.steps.map((x,i)=>`<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;
+        padding:12px 16px;margin-top:10px;display:flex;gap:14px">
+        <div style="width:26px;height:26px;border-radius:8px;background:var(--v50);color:var(--v);font-weight:800;
+        display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+        <div><b style="font-size:13.5px">${esc(x[0])}</b>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:2px">${esc(x[1])}</p></div></div>`).join('');
+    if(s.bullets) return `<div class="section" style="margin-top:24px"><span class="eyebrow">${esc(s.h)}</span>
+      <ul class="where body">${s.bullets.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+    return `<div class="section" style="margin-top:24px"><span class="eyebrow">${esc(s.h)}</span>
+      <div class="body" style="max-width:780px">${esc(s.body)}</div></div>`;
+  };
+  shell('learn', `
+  <div class="crumb"><a href="#/">Overview</a> / learn</div>
+  <div class="eyebrow">Start here</div>
+  <h1 class="flow-h2">${esc(L.title)}</h1>
+  <p class="story">${esc(L.lead)}</p>
+  ${L.sections.map(sec).join('')}
+  <div class="foot">Client-safe — nothing here you couldn't say with the prospect in the room.
+  The words themselves: <a href="#/terms">eight terms, one line each</a>.</div>`);
 }
 
 function governanceShowcase(){
@@ -923,6 +955,7 @@ function route(){
   const parts = h.split('/').filter(Boolean);
   if(parts[0]==='destination') return landing('dest');
   if(parts[0]==='ai') return aiPage();
+  if(parts[0]==='learn') return learnPage();
   if(parts[0]==='poc') return pocPage();
   if(parts[0]==='personas') return personasPage();
   if(parts[0]==='terms') return termsPage();

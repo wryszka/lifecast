@@ -24,6 +24,7 @@ Spec: [`LIFECAST_BUILD_BRIEF.md`](LIFECAST_BUILD_BRIEF.md) · Hard rules: [`CLAU
 | 4 | ESG / scenario management | ✅ Built |
 | 5 | Projection migration POC | ✅ Built |
 | 6 | Stochastic + boundaries | ✅ Built |
+| 7 | Model factory (build → Unity → grid → GPU) | ✅ Built |
 | — | LifeCast Cockpit (app) | ✅ Built |
 
 ## Install — one edit
@@ -76,6 +77,8 @@ story with its own README and numbered assets in run order:
   06_stochastic_boundaries/  use case 6 — the fan-out demo + three honest explainers
     00_stochastic_fan_out · 01_vectorisation_boundary
     02_nested_stochastic_costing · 03_esg_plugin
+  07_model_factory/          use case 7 — the model as a UC object: build → Unity → grid → GPU
+    00_build_model · 01_run_grid · 02_gpu_variant · 03_run_gpu (serverless GPU, A10)
   .bundle/                   bundle internals — ignore
 ```
 
@@ -104,6 +107,8 @@ prefixes), all files in the `lifecast_files` volume.
 | Job `lifecast_esg_illustrative` | Phase 4 illustrate: EIOPA RFR ingest (`esg_rfr_curve`, reused from the Excel accelerator) → QuantLib HW1F + Black-Scholes → `esg_hull_white_paths`, AVAILABLE; calibration + martingale diagnostics in MLflow (`/Shared/lifecast/04_scenario_management/esg_calibration`) |
 | Job `lifecast_projection_run` | Phase 5 (the expand): legacy baseline per model point → Python projection on governed inputs (`gld_term_projection`, MLflow-tracked, UC model `lifecast_term_projection` @champion) → per-MP tie-out gate (`gld_projection_validation`, £0.01 tolerance, drift fails the run) |
 | Job `lifecast_stochastic_run` | Phase 6: the term book across 1,000 governed scenario paths via `mapInPandas` (`gld_stochastic_bel`); distribution + curve-reconciliation metric to MLflow — run it on both scenario sets to show the basis difference. Explainers (vectorisation boundary, nested-stochastic costing, ESG plug-in) live in the folder |
+| Job `lifecast_model_factory` | Use case 07 parts 1+2: the projection as a UC model `lifecast_engine_model` (basis+curve frozen into each version; v1 loop → v2 vectorised; per-MP compare gate → `@champion`), then run from Unity across the grid (`grid_size` parameter, 10 vs 100) → `gld_factory_results` (version-stamped) + `gld_grid_timings` |
+| Job `lifecast_model_factory_gpu` | Use case 07 part 3: the same maths as tensors on **serverless GPU compute** (A10, `hardware_accelerator: GPU_1xA10`) — penny-parity gate vs `@champion`, seriatim-scale CPU-vs-GPU timing (`gld_gpu_timings`), registered as the `@gpu` version of the same model |
 | App `lifecast-workbench` — **the LifeCast Cockpit** | The presenter's cockpit (brief §9): persona → question → card (proves / where it lives / build & control / Go deep links / today→tomorrow), plus four read-only status tiles pulled live from UC. Thin by design — no business logic; every Go button opens the real asset. Lets **any SA run this demo, not just the author** |
 
 ## The demo beat

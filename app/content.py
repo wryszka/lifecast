@@ -152,30 +152,38 @@ BLOCKS = {
   "agents": [],
  },
  "modelling": {
-  "title": "Modelling", "section": "Modelling & results", "state": "planned",
-  "will_show": "The projection itself — the content move: policies + assumptions → cashflows → reserve, in Python on the platform, validated side by side against the engine.",
+  "title": "Modelling", "section": "Modelling & results", "state": "live",
+  "will_show": "The projection itself, three depths in: tied out side by side against the engine (use case 05), fanned across scenarios (06), and rebuilt as a governed Unity Catalog model — build → save to Unity → run from Unity, on a CPU grid or a GPU (07).",
   "tabs": [
-   ("What we're showing", "Policies + assumptions → cashflows → reserve."),
-   ("Old → new", "Engine content → Python on the platform, validated side by side per model point."),
-   ("Management", "Run overseer + reconciliation agents, MLflow run history, validate-to-tolerance gates."),
+   ("What we're showing", "Policies + assumptions → cashflows → reserve — and the model itself as a versioned, governed object."),
+   ("Old → new", "Engine content → Python on the platform: validated per model point, registered in Unity Catalog (versions, aliases, a compare gate before any promotion), run from the registry on whatever compute the quarter needs."),
+   ("Management", "MLflow run history, the registry's audit answer (who built which version, from which basis), validate-to-tolerance gates, run overseer + reconciliation agents."),
   ],
-  "posture": "Low-hanging fruit: the deterministic term projection. Stochastic is roadmap — the hard last mile, said openly. That last mile is where accelerated (GPU) compute enters, per hot loop, when profiling says so — roadmap, stated, not sold.",
-  "assets": [("Projection migration assets — live in the workspace", "folder:05_projection_migration"),
-             ("Stochastic fan-out assets — live in the workspace", "folder:06_stochastic_boundaries")],
+  "posture": "The deterministic term projection is live end to end: side-by-side tie-out, then the model factory — v1 vs v2 compared to the penny before @champion moves, the grid a job parameter (10 vs 100), and the same maths on serverless GPU compute when the book goes seriatim. Stochastic at scale remains the honest last mile.",
+  "assets": [("Model factory — build → Unity → grid → GPU (use case 07)", "folder:07_model_factory"),
+             ("The registered model — lifecast_engine_model, versions + aliases", "model:lifecast_engine_model"),
+             ("Run the factory (parts 1+2, serverless)", "job:lifecast_model_factory"),
+             ("Run the GPU part (serverless GPU, A10)", "job:lifecast_model_factory_gpu"),
+             ("Projection migration — the side-by-side tie-out (use case 05)", "folder:05_projection_migration"),
+             ("Stochastic fan-out (use case 06)", "folder:06_stochastic_boundaries")],
   "agents": [("Run overseer — did it complete, anything quarantined, safe to release?", "specced"),
              ("Reconciliation — explains where the two engines differ, and why", "placeholder")],
  },
  "results": {
-  "title": "Results", "section": "Modelling & results", "state": "planned",
-  "will_show": "Fulfilment cash flows and IFRS 17 outputs — one governed results layer instead of a CSV dump and a hand-built board pack.",
+  "title": "Results", "section": "Modelling & results", "state": "live",
+  "will_show": "The results desk: the engine's dumps land governed once, and minutes later the dashboard is current, Genie answers in English, the analytics the batch never had time for are on the shelf, and every number carries its papers.",
   "tabs": [
-   ("What we're showing", "Fulfilment cash flows = PV of future cash flows + risk adjustment, by IFRS 17 group; feeds the CSM engine downstream."),
-   ("Old → new", "CSV dump + Excel board pack → Delta + AI/BI dashboards + Genie."),
-   ("Management", "Movement & disclosure agent, actual vs expected, movement analysis."),
+   ("What we're showing", "Engine output → one governed results layer → dashboard, ad-hoc analytics, Genie, the Excel pack — and the audit trail per run."),
+   ("Old → new", "CSV dump + hand-rebuilt board pack → Delta + a two-page AI/BI dashboard (results · risk & audit) + Genie — with the ±100bp rate-risk map and concentration already answered from the engine's own runs."),
+   ("Management", "gld_run_audit — one row per engine run: input file + gate verdict, basis version + approver, curve, operator, minutes-to-queryable. Delta history and VERSION AS OF for 'reproduce that number'."),
   ],
-  "posture": "The CFO export is always offered; regulatory templates stay in Excel.",
-  "assets": [("Results & Genie assets — live in the workspace", "folder:03_results_and_genie")],
-  "agents": [("Movement & disclosure — IFRS 17 movement attribution, drafts commentary", "placeholder")],
+  "posture": "The CFO export is always offered — three sheets now: board pack, rate risk, and the audit sheet. Regulatory templates stay in Excel; even the spreadsheet carries its provenance.",
+  "assets": [("The BEL Movement dashboard — page 2 is Risk & audit", "dashboard:"),
+             ("Ask the results — Genie space (incl. the audit trail)", "genie:"),
+             ("gld_run_audit — every number's papers, one row per run", "tbl:gld_run_audit"),
+             ("The board pack on the volume (Excel, three sheets)", "vol:board_pack"),
+             ("Results & Genie assets — live in the workspace", "folder:03_results_and_genie")],
+  "agents": [("Movement & disclosure — movement attribution, drafts commentary", "placeholder")],
  },
 }
 
@@ -186,10 +194,12 @@ GOV_SHOWCASE = [
   "route": "#/governance/record"},
  {"title": "Trace this number", "state": "coming",
   "text": "Lineage policy → assumption → cashflow → FCF: pick a number, walk back to everything that fed it."},
- {"title": "Version & reproduce", "state": "coming",
-  "text": "Reproduce a historical valuation exactly — same data, same basis, same code version, same number."},
- {"title": "Model risk register", "state": "coming",
-  "text": "Validation status, owner, and the reconciliation-to-engine result, per model."},
+ {"title": "Version & reproduce", "state": "live",
+  "text": "Every engine run's papers in one row — input file, gate verdict, basis version + approver, curve, operator (gld_run_audit); Delta time travel re-derives any past number. Model versions freeze their basis and curve inside them.",
+  "route": "#/block/results"},
+ {"title": "Model risk register", "state": "live",
+  "text": "The registry's spine is live: lifecast_engine_model versions with who-built-what, the per-model-point compare gate before promotion, and aliases marking what production trusts. The full register view is the roadmap on top.",
+  "route": "#/block/modelling"},
  {"title": "Roles & segregation of duties", "state": "coming",
   "text": "Preparer / reviewer / approver — who may enter, who may approve, who may release."},
 ]
@@ -292,6 +302,53 @@ POC_PLAN = {
   "Two matching engine output files (same dates) as the baseline",
   "2–3 actuaries for the workshop — the logic is theirs",
   "A named contact in validation, involved from week 1",
+ ],
+}
+
+# ── Learn: the basics for someone new to this — what the business is, how the
+# process runs, why it hurts, what LifeCast shows. Client-safe, plain words. ──
+LEARN = {
+ "title": "The basics — what this is about",
+ "lead": "Ten minutes of background so the rest of the cockpit makes sense. No Databricks "
+         "here yet — just the business, the process, and where it creaks.",
+ "sections": [
+  {"h": "The business, in one paragraph",
+   "body": "A life insurer takes premiums today and promises payments that may fall due "
+           "decades from now. Regulators require it to hold reserves against those promises, "
+           "so every quarter actuaries value them: project each policy's future premiums, "
+           "claims and expenses year by year, using assumptions about mortality, lapse and "
+           "expenses, then discount back with a market curve. The headline output is the "
+           "best estimate liability (BEL) — the number the board pack, the regulator and "
+           "the capital calculation all stand on."},
+  {"h": "The process, in five steps", "steps": [
+     ("Policy data", "Millions of admin-system records are extracted, cleaned and checked. Bad rows must be caught here — a rejected policy still has a liability."),
+     ("Model points", "Policies are grouped into a few thousand representative records (by age, sex, smoker status, outstanding term) so the engine can finish overnight. Control totals prove nothing was lost."),
+     ("The engine", "A licensed actuarial modelling system reads the model point file, the approved assumptions and the curve, and projects everything decades ahead. It runs in batches and dumps result files."),
+     ("Results", "The dumps become the quarter's numbers: BEL by product, movement vs last quarter, sensitivities. Traditionally rebuilt into a board pack by hand, in Excel."),
+     ("Reporting & audit", "The numbers flow to the board, the regulator and the auditors — who ask: which data, which basis, who approved it, can you reproduce it?"),
+  ]},
+  {"h": "Where it hurts today", "bullets": [
+     "The overnight window: one batch per day means one question answered per day — a sensitivity you didn't schedule waits until next quarter.",
+     "Excel around the edges: assumptions entered in workbooks, board packs rebuilt by hand, five versions of the same number in circulation.",
+     "One specialist tool, one bottleneck: the engine's queue, its licence, and the few people who can operate it shape everyone's calendar.",
+     "Audit by archaeology: 'which basis fed that number' is an email thread, not a query.",
+  ]},
+  {"h": "What LifeCast shows",
+   "body": "Two moves, in order. First — the integration: everything around the engine "
+           "(data, model points, assumptions, scenarios, results, governance) moves onto "
+           "one governed platform while the engine itself runs unchanged, reading the exact "
+           "same file it reads today. That is most of the pain gone, at no transition risk. "
+           "Second — beside the engine: the projection itself rebuilt in Python, tied out "
+           "against the engine per model point, versioned in Unity Catalog, and run from "
+           "the registry on whatever compute the quarter needs — a CPU grid or a GPU. "
+           "Whether a product ever moves engines is the client's decision, made on evidence "
+           "the platform produces run by run."},
+  {"h": "Where to go next", "bullets": [
+     "Terms — the eight words you'll hear, one line each (sidebar).",
+     "Overview — the process map; every block opens the part of the demo that proves it.",
+     "Model points — the first live beat: break the feed, watch the gate stop the run.",
+     "The demo guide (sidebar) — the full 15-minute script with what to say and expect.",
+  ]},
  ],
 }
 

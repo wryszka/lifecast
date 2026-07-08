@@ -48,7 +48,7 @@ payload = {
     "blocks": {k: {**b, "assets": [{"label": l, "url": link(kk)} for l, kk in b["assets"]]}
                for k, b in content.BLOCKS.items()},
     "gov_showcase": content.GOV_SHOWCASE, "gov_agent": content.GOV_AGENT,
-    "roadmap": content.ROADMAP, "ai": content.AI_PAGE,
+    "roadmap": content.ROADMAP, "ai": content.AI_PAGE, "learn": content.LEARN,
     "demo_guide": "https://smoke.invalid/demo-guide",
     "host": "https://smoke.invalid", "catalog": "smoke_catalog",
 }
