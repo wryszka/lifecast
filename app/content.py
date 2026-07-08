@@ -130,12 +130,25 @@ BLOCKS = {
  "assumptions": {
   "title": "Assumptions", "section": "Inputs", "state": "live",
   "will_show": "The basis — mortality, lapse and expense — as a governed, versioned asset: drafted (still in Excel, deliberately), submitted, approved maker/checker, and every action on an append-only audit trail. Every run records which basis fed it.",
+  "lead": "Mortality, lapse and expense rates decide what every policy is worth — so changing them is controlled like a financial transaction.",
+  "flow": [
+   ("Draft in Excel", "The actuary proposes new rates in the same workbook they use today — the entry surface doesn't change."),
+   ("Land as a version", "The proposal becomes the next version in a registry. Nothing is ever overwritten."),
+   ("Second pair of eyes", "A different person approves or rejects — every decision logged, with who and when."),
+   ("One place to read", "Every valuation reads the approved version. Nobody can quietly run different rates."),
+  ],
+  "today": "Rates live in workbooks on shared drives; which file fed which valuation is reconstructed from memory and email.",
+  "here": "One approved basis — versioned, signed off, and stamped onto every run that used it.",
+  "words": [
+   ("Basis", "the approved set of mortality, lapse and expense rates a valuation uses"),
+   ("Maker / checker", "one person proposes, a different person approves — segregation of duties"),
+  ],
   "tabs": [
    ("What we're showing", "Setting mortality, lapse and expense — the basis every valuation uses — with a real approval workflow."),
    ("Old → new", "Excel workbooks one person owns → versioned Delta tables with a registry (DRAFT → PENDING → APPROVED → SUPERSEDED). The Excel entry sheet is kept — it reads and writes the governed tables live via DATABRICKS.SQL."),
    ("Management", "Maker/checker as two jobs (entry drafts a shocked basis; approval approves or rejects), asm_approval_log as the audit trail, and asm_*_active() as the single read path every consumer uses."),
   ],
-  "posture": "Bring yours — the structure holds any basis. The demo's v2 basis (smoker loading, approved) is what the engine, the factory model and every valuation in this cockpit actually consume.",
+  "posture": "Bring yours — the structure holds any basis. The approved basis you see here is the one the engine and every valuation in this cockpit actually consume.",
   "assets": [("Assumption governance assets — live in the workspace", "folder:02_assumption_governance"),
              ("The registry — asm_assumption_sets (versions, status, approvers)", "tbl:asm_assumption_sets"),
              ("The Excel entry workbook on the volume (DATABRICKS.SQL round-trip)", "vol:excel"),
@@ -146,6 +159,19 @@ BLOCKS = {
  "scenarios": {
   "title": "Scenarios (ESG)", "section": "Inputs", "state": "live",
   "will_show": "Economic scenarios governed like everything else: your licensed provider's deliveries validated, versioned and activated through a gate — plus an illustrative in-platform set (QuantLib, calibrated to the EIOPA curve, tracked in MLflow) that never activates itself.",
+  "lead": "Market-consistent valuations need thousands of simulated economic futures. They come from your licensed provider — and land here through a gate.",
+  "flow": [
+   ("Delivery arrives", "Your scenario provider drops its files in one folder — same files, same format as today."),
+   ("The gate checks", "Is the grid complete? Are the discount factors sane? A broken delivery is rejected, never used."),
+   ("Versioned & activated", "Good sets are versioned in a registry; exactly one is ACTIVE at a time."),
+   ("One place to read", "Every stochastic run reads the active set — the number and its scenarios travel together."),
+  ],
+  "today": "Scenario files sit on a share; which set produced which result is an email archaeology exercise.",
+  "here": "Sets are gated, versioned and activated deliberately — and every run records which one it used.",
+  "words": [
+   ("ESG", "Economic Scenario Generator — licensed software that simulates thousands of market futures"),
+   ("Active set", "the one scenario set valuations are allowed to use right now"),
+  ],
   "tabs": [
    ("What we're showing", "Economic scenarios for market-consistent runs — consumed from whoever generates them."),
    ("Old → new", "Provider file on a share → the esg/inbound folder as the plug point: deliveries are gated (grid completeness, sane discount factors), versioned in a registry (ACTIVE / AVAILABLE / SUPERSEDED), and consumers read one function — esg_scenarios_active()."),
@@ -162,12 +188,25 @@ BLOCKS = {
  "modelling": {
   "title": "Modelling", "section": "Modelling & results", "state": "live",
   "will_show": "The projection itself, three depths in: tied out side by side against the engine (use case 05), fanned across scenarios (06), and rebuilt as a governed Unity Catalog model — build → save to Unity → run from Unity, on a CPU grid or a GPU (07).",
+  "lead": "The projection itself — the maths the licensed engine runs — rebuilt in open Python, proven against the engine per model point, and versioned like everything else here.",
+  "flow": [
+   ("Rebuild in Python", "The same calculation, in code anyone can read, running on the governed data."),
+   ("Prove it matches", "Every model point compared against the engine's own output — to the penny, or it doesn't ship."),
+   ("Version in Unity", "The model becomes a registered object: versions, an approved champion, who changed what."),
+   ("Run it anywhere", "Loaded from the registry onto a bigger grid or a GPU — compute is a setting, not a project."),
+  ],
+  "today": "The model lives inside licensed software: one queue, a few licensed seats, answers arrive overnight.",
+  "here": "Open code, proven equivalent run by run, versioned — and the full book valued in seconds.",
+  "words": [
+   ("Champion", "the model version production trusts — promoted only after the comparison passes"),
+   ("Seriatim", "valuing every policy individually instead of in grouped model points"),
+  ],
   "tabs": [
    ("What we're showing", "Policies + assumptions → cashflows → reserve — and the model itself as a versioned, governed object."),
    ("Old → new", "Engine content → Python on the platform: validated per model point, registered in Unity Catalog (versions, aliases, a compare gate before any promotion), run from the registry on whatever compute the quarter needs."),
    ("Management", "MLflow run history, the registry's audit answer (who built which version, from which basis), validate-to-tolerance gates, run overseer + reconciliation agents."),
   ],
-  "posture": "The deterministic term projection is live end to end: side-by-side tie-out, then the model factory — v1 vs v2 compared to the penny before @champion moves, the grid a job parameter (10 vs 100), and the same maths on serverless GPU compute when the book goes seriatim. Stochastic at scale remains the honest last mile.",
+  "posture": "The deterministic term projection is live end to end — tied out, versioned, run from the registry on a grid or a GPU. Stochastic at scale remains the honest last mile, said openly.",
   "assets": [("Model factory — build → Unity → grid → GPU (use case 07)", "folder:07_model_factory"),
              ("The registered model — lifecast_engine_model, versions + aliases", "model:lifecast_engine_model"),
              ("Run the factory — build, compare, promote, grid", "job:lifecast_model_factory"),
@@ -180,6 +219,19 @@ BLOCKS = {
  "results": {
   "title": "Results", "section": "Modelling & results", "state": "live",
   "will_show": "The results desk: the engine's dumps land governed once, and minutes later the dashboard is current, Genie answers in English, the analytics the batch never had time for are on the shelf, and every number carries its papers.",
+  "lead": "The engine finishes overnight and dumps its files, like it always has. Minutes later, everything downstream already exists.",
+  "flow": [
+   ("Files land", "The engine's output files hit the landing folder — nothing about the engine changes."),
+   ("Governed in minutes", "The dumps become queryable tables automatically — no re-keying, no pivot rebuilds."),
+   ("Everyone self-serves", "The dashboard is already current; questions get asked in plain English; Excel still gets its pack."),
+   ("Every number has papers", "Which file, which basis, who approved it, who ran it — one audit row per run."),
+  ],
+  "today": "The board pack is rebuilt by hand each quarter; a question nobody scheduled waits for next quarter's batch.",
+  "here": "Dashboard live minutes after the run, ad-hoc answers in seconds, and the audit trail is a query.",
+  "words": [
+   ("BEL", "best estimate liability — the headline number: what the future promises are worth today"),
+   ("±100bp sensitivity", "how much the liability moves if interest rates shift one percent — the engine runs it as standard"),
+  ],
   "tabs": [
    ("What we're showing", "Engine output → one governed results layer → dashboard, ad-hoc analytics, Genie, the Excel pack — and the audit trail per run."),
    ("Old → new", "CSV dump + hand-rebuilt board pack → Delta + a two-page AI/BI dashboard (results · risk & audit) + Genie — with the ±100bp rate-risk map and concentration already answered from the engine's own runs."),

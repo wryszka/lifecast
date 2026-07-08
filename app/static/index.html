@@ -133,6 +133,20 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .akind.k-model{background:#f0fdfa;color:#0f766e}
 .akind.k-exp{background:#f0fdfa;color:#0f766e}
 .akind.k-ws{background:#f1f5f9;color:#475569}
+/* block-page mini flow — the landing map's grammar, one level down */
+.bflow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.bfstep{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.bfstep .bfn{width:24px;height:24px;border-radius:8px;background:var(--v50);color:var(--v);font-weight:800;
+             font-size:12px;display:flex;align-items:center;justify-content:center;margin-bottom:7px}
+.bfstep b{font-size:13.5px;display:block;margin-bottom:3px}
+.bfstep p{font-size:12px;color:var(--muted);line-height:1.5}
+.bfstep:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:14px;color:var(--v);
+                                font-weight:800;font-size:13px;z-index:1}
+@media(max-width:760px){.bfstep::after{display:none!important}}
+.wordrow{display:flex;gap:10px;align-items:baseline;background:var(--card);border:1px solid var(--line);
+         border-radius:10px;padding:9px 14px;margin-top:8px;font-size:12.5px}
+.wordrow b{flex-shrink:0}
+.wordrow span{color:var(--muted)}
 /* flow page */
 .flow-h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 8px}
 .story{color:var(--ink);max-width:760px;font-size:15px}
@@ -839,17 +853,32 @@ function blockPage(key){
   }
   const b = DATA.blocks[key]; if(!b) return landing();
   const live = b.state==='live';
-  shell(key, `
-  <div class="crumb"><a href="#/">Overview</a> / ${esc(b.title)}</div>
-  <div class="eyebrow">${esc(b.section)}<span class="ntag ${esc(b.state)}">${esc(b.state)}${live?'':' · placeholder'}</span></div>
-  <h1 class="flow-h2">${esc(b.title)}</h1>
+  const story = b.flow ? `
+  <p class="lead" style="max-width:760px">${esc(b.lead)}</p>
+  <div class="section" style="margin-top:22px"><span class="eyebrow">What happens here</span></div>
+  <div class="bflow">
+    ${b.flow.map((st,i)=>`<div class="bfstep"><div class="bfn">${i+1}</div>
+      <b>${esc(st[0])}</b><p>${esc(st[1])}</p></div>`).join('')}
+  </div>
+  <div class="section" style="margin-top:22px"><span class="eyebrow">What changes</span></div>
+  <div class="tt"><div class="t today"><span class="tag">Today</span>${esc(b.today)}</div>
+    <div class="t tomorrow"><span class="tag">Here</span>${esc(b.here)}</div></div>
+  <div class="section" style="margin-top:22px"><span class="eyebrow">The words you'll need</span></div>
+  ${b.words.map(w=>`<div class="wordrow"><b>${esc(w[0])}</b><span>${esc(w[1])}</span></div>`).join('')}
+  <div style="margin-top:8px;font-size:12px"><a href="#/terms">All eight terms →</a></div>
+  <div class="scopenote">${esc(b.posture)}</div>` : `
   <p class="lead">${esc(b.will_show)}</p>
-  <div class="section" style="margin-top:20px"><span class="eyebrow">${live?'The beat — same three tabs':'The beat, when it lands — same three tabs'}</span></div>
+  <div class="section" style="margin-top:20px"><span class="eyebrow">The beat, when it lands — same three tabs</span></div>
   <div class="phgrid">
     ${b.tabs.map((t,i)=>`<div class="phcard"><span class="tlbl">${i+1} · ${esc(t[0])}</span>
       <p>${esc(t[1])}</p></div>`).join('')}
   </div>
-  <div class="scopenote">${esc(b.posture)}</div>
+  <div class="scopenote">${esc(b.posture)}</div>`;
+  shell(key, `
+  <div class="crumb"><a href="#/">Overview</a> / ${esc(b.title)}</div>
+  <div class="eyebrow">${esc(b.section)}<span class="ntag ${esc(b.state)}">${esc(b.state)}${live?'':' · placeholder'}</span></div>
+  <h1 class="flow-h2">${esc(b.title)}</h1>
+  ${story}
   ${b.agents.length?`<div class="section" style="margin-top:18px"><span class="eyebrow">Agents — in this beat's management tab</span></div>`+
     b.agents.map(a=>`<div class="agentrow">${esc(a[0])}<span class="ntag ${esc(a[1])}" style="margin-left:auto">${esc(a[1])}</span></div>`).join(''):''}
   <div class="section" style="margin-top:22px"><span class="eyebrow">${live?'Open the real assets':'Already live underneath'}</span></div>
