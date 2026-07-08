@@ -45,7 +45,8 @@ payload = {
     "flows": flows, "personas": personas,
     "terms": [{"term": t, "text": x} for t, x in content.TERMS],
     "poc": content.POC_PLAN,
-    "blocks": {k: {**b, "assets": [{"label": l, "url": link(kk)} for l, kk in b["assets"]]}
+    "blocks": {k: {**b, "assets": [{"label": l, "url": link(kk),
+                                    "kind": kk.partition(":")[0]} for l, kk in b["assets"]]}
                for k, b in content.BLOCKS.items()},
     "gov_showcase": content.GOV_SHOWCASE, "gov_agent": content.GOV_AGENT,
     "roadmap": content.ROADMAP, "ai": content.AI_PAGE, "learn": content.LEARN,

@@ -112,6 +112,27 @@ h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .tt .tag{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px}
 .tt .today .tag{color:var(--amber)} .tt .tomorrow .tag{color:var(--green)}
 .foot{margin-top:36px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+/* block-page asset cards */
+.assetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:10px}
+.assetcard{display:flex;flex-direction:column;gap:5px;background:var(--card);border:1px solid var(--line);
+           border-radius:12px;padding:13px 15px;color:var(--ink);
+           transition:border-color .12s, box-shadow .12s}
+.assetcard:hover{border-color:var(--v);box-shadow:0 2px 10px rgba(37,99,235,.08)}
+.assetcard .atop{display:flex;align-items:center;justify-content:space-between}
+.assetcard .aarr{color:var(--v);font-weight:800;font-size:12px}
+.assetcard b{font-size:13px;line-height:1.35}
+.assetcard span.adesc{font-size:11.5px;color:var(--muted);line-height:1.45}
+.akind{font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+       padding:2.5px 7px;border-radius:99px}
+.akind.k-job{background:var(--v50);color:var(--v7)}
+.akind.k-pipeline{background:var(--v50);color:var(--v7)}
+.akind.k-tbl{background:var(--green-bg);color:var(--green)}
+.akind.k-vol{background:var(--amber-bg);color:var(--amber)}
+.akind.k-dashboard{background:#f5f3ff;color:#6d28d9}
+.akind.k-genie{background:#f5f3ff;color:#6d28d9}
+.akind.k-model{background:#f0fdfa;color:#0f766e}
+.akind.k-exp{background:#f0fdfa;color:#0f766e}
+.akind.k-ws{background:#f1f5f9;color:#475569}
 /* flow page */
 .flow-h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 8px}
 .story{color:var(--ink);max-width:760px;font-size:15px}
@@ -297,7 +318,7 @@ a.acard:hover{border-color:var(--v)}
 </style>
 </head>
 <body>
-<div id="root" style="padding:40px;font-family:Inter,sans-serif">Loading…</div>
+<div id="root"><div style="padding:40px;font-family:Inter,sans-serif">Loading…</div></div>
 <script>
 let DATA=null, STATUS=null, GOV=null;
 const root=document.getElementById('root');
@@ -831,8 +852,20 @@ function blockPage(key){
   <div class="scopenote">${esc(b.posture)}</div>
   ${b.agents.length?`<div class="section" style="margin-top:18px"><span class="eyebrow">Agents — in this beat's management tab</span></div>`+
     b.agents.map(a=>`<div class="agentrow">${esc(a[0])}<span class="ntag ${esc(a[1])}" style="margin-left:auto">${esc(a[1])}</span></div>`).join(''):''}
-  <div class="section" style="margin-top:18px"><span class="eyebrow">${live?'Open the real assets':'Already live underneath'}</span>
-    <div class="body">${b.assets.map(a=>`<a href="${a.url}" target="_blank" style="display:block;margin-top:5px;font-weight:600;font-size:13px">${esc(a.label)} ↗</a>`).join('')}</div></div>
+  <div class="section" style="margin-top:22px"><span class="eyebrow">${live?'Open the real assets':'Already live underneath'}</span></div>
+  <div class="assetgrid">${b.assets.map(a=>{
+    const KIND = {job:'Job', pipeline:'Pipeline', tbl:'Table', vol:'Volume', dashboard:'Dashboard',
+                  genie:'Genie', genie_runhealth:'Genie', model:'UC model', exp:'MLflow',
+                  folder:'Workspace', nb:'Notebook', nb_file:'Notebook'};
+    const k = a.kind || 'folder';
+    const cls = {genie_runhealth:'genie', folder:'ws', nb:'ws', nb_file:'ws'}[k] || k;
+    const dash = a.label.indexOf(' — ');
+    const title = dash > -1 ? a.label.slice(0, dash) : a.label;
+    const desc = dash > -1 ? a.label.slice(dash + 3) : '';
+    return `<a class="assetcard" href="${a.url}" target="_blank">
+      <div class="atop"><span class="akind k-${cls}">${KIND[k]||'Asset'}</span><span class="aarr">↗</span></div>
+      <b>${esc(title)}</b>${desc?`<span class="adesc">${esc(desc)}</span>`:''}</a>`;
+  }).join('')}</div>
   <div class="foot">${live
     ?'Everything linked above is real and running on this workspace — the story page for this block (the full three-tab beat) is the next build.'
     :'An openly-marked placeholder — it states intent, it never fake-works. The workspace assets behind it are real and running today.'}</div>`);

@@ -181,7 +181,8 @@ def content():
     return {"tiles": tiles, "flows": flows, "personas": personas,
             "terms": [{"term": t, "text": x} for t, x in TERMS],
             "poc": POC_PLAN,
-            "blocks": {k: {**b, "assets": [{"label": l, "url": resolve_link(kk)} for l, kk in b["assets"]]}
+            "blocks": {k: {**b, "assets": [{"label": l, "url": resolve_link(kk),
+                                            "kind": kk.partition(":")[0]} for l, kk in b["assets"]]}
                        for k, b in BLOCKS.items()},
             "gov_showcase": GOV_SHOWCASE, "gov_agent": GOV_AGENT, "roadmap": ROADMAP,
             "ai": AI_PAGE,
